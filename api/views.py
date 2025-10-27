@@ -156,9 +156,9 @@ def admin_login(request):
 def create_Team(request):
      name=request.data.get("name")
      description=request.data.get("description")
-     members_email = request.data.get("members",[])
+     members_name = request.data.get("members",[])
 
-     if not name or not description or not members_email:
+     if not name or not description or not members_name:
           return Response({"msg":"please fill the all requied fields"},status=404)
      
      
@@ -168,20 +168,48 @@ def create_Team(request):
           description= description
      )
      members =[]
-     for email in members_email:
+     for name in members_name:
           try:
-            user_email=user.objects.get(email=email)
-            members.append(user_email)
+            user_name=user.objects.get(username=name)
+            members.append(user_name)
           except user.DoesNotExist:
-               return Response({"msg":F"user with email{email} not found"},status=404)
+               return Response({"msg":F"user with name{name} not found"},status=404)
 
-     team_create.members.add(user_email)
+     team_create.members.add(*members)
      team_create.save()
 
      return Response({"msg":"Team create sucessfully",
                       "name":name,
                       "description":description,
-                      "members": members_email},status=200)
+                      "members": members_name},status=200)
+
+##Team remove ##
+@api_view(['POST'])
+def remove_team_member(request):
+     team_name = request.data.get("team_name")
+     member_name = request.data.get("member_name")
+
+     if not team_name or not member_name:
+          return Response({"msg":"please provide both team_name and member_name"},status=400)
+     
+     try:
+          team = Team.objects.get(name=team_name)
+     except Team.DoesNotExist:
+          return Response({"msg":f"Team'{team_name}'not found"},status=404)
+     
+     try:
+          member = user.objects.get(username=member_name)
+     except user.DoesNotExist:
+          return Response({"msg":F"user '{member_name}not found"},status=404)
+     
+     team.members.remove(member)
+     team.save()
+
+     return Response({"msg":f"User {team_name} removed from team {member_name} successfully"},status=200)
+     
+
+          
+     
 
 
      
