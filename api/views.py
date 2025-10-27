@@ -41,6 +41,31 @@ def user_register(request):
                      "password":password,
                      "role_type":role_type},status=200)
 
+@api_view(['GET'])
+def user_details(request):
+     try:
+          user_view =user.objects.all()
+          if not user_view:
+               return Response({"msg":"user not found"},status=404)
+          
+          get=[]
+          for user in user_view:
+               get.append({
+                    "username":user.username,
+                    "email":user.email
+
+               },status=200)
+               return Response(get)
+     except Exception as e:
+          return Response({"msg":"user data not found"},status=404)
+
+          
+               
+
+
+
+
+
 @api_view(['POST'])
 def user_login(request):
     email = request.data.get("email")
