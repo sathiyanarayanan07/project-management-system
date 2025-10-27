@@ -84,6 +84,36 @@ def user_login(request):
                      "email":email,
                      "role_type":role_type},status=200)
 
+@api_view(['PUT'])
+def user_profile(request,email):
+        try:
+             user_instance = user.objects.get(email=email)
+        except user.DoesNotExist:
+             return Response({"msg":"user not found"},status=404)
+        user_image =request.FILES.get("user_image")
+        username= request.data.get("username")
+        email= request.data.get("email")
+        Phone_number = request.data.get("Phone_number")
+        password = request.data.get("password")
+        if user_image:
+              user_instance.user_image = user_image
+        if username:
+              user_instance.username= username
+        if email:
+          user_instance.email = email
+        if Phone_number:
+            user_instance.Phone_number = Phone_number
+        if password:
+             user_instance.password = password
+        user_instance.save()
+        serializer = userSerializer(user_instance)
+        return Response(serializer.data, status=200)
+
+
+
+
+     
+
              
   
 
