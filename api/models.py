@@ -11,11 +11,14 @@ class user(models.Model):
     role_type =models.CharField(max_length=100,default="employee")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __str__(self):
+        return self.username
+
 class adminuser(models.Model):
     admin_user= models.CharField(max_length=100,null=True,blank=True)
     password =models.CharField(max_length=100,null=True,blank=True)
 
 class Team(models.Model):
-    name =models.CharField(max_length=100,unique=True)
+    name =models.CharField(max_length=100,null=True,blank=True)
     description =models.TextField(max_length=100,null=True,blank=True)
     members= models.ManyToManyField(user,null=True,blank=True)

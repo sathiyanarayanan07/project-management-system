@@ -151,6 +151,39 @@ def admin_login(request):
                       "admin_user":admin_user,
                       "password":password},status=200)
 
+##Team_create#
+@api_view(['POST'])
+def create_Team(request):
+     name=request.data.get("name")
+     description=request.data.get("description")
+     members_email = request.data.get("members",[])
+
+     if not name or not description or not members_email:
+          return Response({"msg":"please fill the all requied fields"},status=404)
+     
+     
+
+     team_create = Team.objects.create(
+          name = name,
+          description= description
+     )
+     members =[]
+     for email in members_email:
+          try:
+            user_email=user.objects.get(email=email)
+            members.append(user_email)
+          except user.DoesNotExist:
+               return Response({"msg":F"user with email{email} not found"},status=404)
+
+     team_create.members.add(user_email)
+     team_create.save()
+
+     return Response({"msg":"Team create sucessfully",
+                      "name":name,
+                      "description":description,
+                      "members": members_email},status=200)
+
+
      
      
 
