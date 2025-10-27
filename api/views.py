@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 def user_register(request):
     username = request.data.get("username")
     email = request.data.get("email")
+    Phone_number= request.data.get("Phone_number")
     password = request.data.get("password")
     role_type = request.data.get("role_type")
      
@@ -25,6 +26,7 @@ def user_register(request):
         create_user=user.objects.create(
         username=username,
         email=email,
+        Phone_number=Phone_number,
         password=password,
         role_type=role_type
     )
@@ -38,6 +40,7 @@ def user_register(request):
     return Response({"msg":"user register sucessfully",
                      "username":username,
                      "email":email,
+                     "Phone_number":Phone_number,
                      "password":password,
                      "role_type":role_type},status=200)
 
