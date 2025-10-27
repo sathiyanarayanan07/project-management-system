@@ -9,7 +9,8 @@ urlpatterns = [
     path("user_profile_details/",views.user_profile_details,name="user_profile_details"),
     path("admin_login/",views.admin_login,name="admin_login"),
     path("create_Team/",views.create_Team,name="create_Team"),
-    path("remove_team_member/",views.remove_team_member,name="remove_member")
+    path("remove_team_member/",views.remove_team_member,name="remove_member"),
+    path("update_team/",views.team_update,name="update_team")
 
 
 ]

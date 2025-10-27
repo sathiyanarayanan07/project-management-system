@@ -206,6 +206,49 @@ def remove_team_member(request):
      team.save()
 
      return Response({"msg":f"User {team_name} removed from team {member_name} successfully"},status=200)
+
+
+##team update##
+@api_view(['PUT'])
+def team_update(request):
+     team_name = request.data.get("team_name")
+     new_description =request.data.get("description")
+     member_emails = request.data.get("members",[])
+
+     if not team_name:
+          return Response({"msg":"please provide the existing team_name"},status=404)
+     
+     try:
+          team = Team.objects.get(name=team_name)
+     except Team.DoesNotExist:
+          return Response({"msg":f"Team'{team_name}'not found"},status=404)
+     
+  
+     if new_description:
+          team.description = new_description
+
+
+     if member_emails:
+        members = []
+        for email in member_emails:
+            matching_users = user.objects.filter(email=email)
+            if not matching_users.exists():
+                return Response({"msg": f"User with email '{email}' not found"}, status=404)
+            members.extend(matching_users)
+        team.members.set(members)
+
+     return Response({
+        "msg": "Team updated successfully",
+        "team_name": team.name,
+        "description": team.description,
+        "members": [m.email for m in team.members.all()]
+    }, status=200)
+
+
+     
+     
+
+     
      
 
           
