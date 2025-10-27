@@ -58,6 +58,7 @@ def user_details(request):
         data.append({
             "username": u.username,
             "email": u.email,
+            "password":u.password,
             "created_at":u.created_at
         })
 
