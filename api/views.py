@@ -95,6 +95,7 @@ def user_profile(request,email):
         email= request.data.get("email")
         Phone_number = request.data.get("Phone_number")
         password = request.data.get("password")
+        role_type = request.data.get("role_type")
         if user_image:
               user_instance.user_image = user_image
         if username:
@@ -105,10 +106,31 @@ def user_profile(request,email):
             user_instance.Phone_number = Phone_number
         if password:
              user_instance.password = password
+        if role_type:
+             user_instance.role_type = role_type
         user_instance.save()
         serializer = userSerializer(user_instance)
         return Response(serializer.data, status=200)
 
+@api_view(['GET'])
+def user_profile_details(request):
+     profile_details = user.objects.all()
+
+     if not profile_details:
+          return Response({"msg":"user profile details not found"},status=404)
+     
+     user_pro =[]
+     for up in profile_details:
+          user_pro.append({
+               "username":up.username,
+               "email":up.email,
+               "Phone_number":up.Phone_number,
+               "password":up.password,
+               "role_type":up.role_type
+
+          })
+          return Response(user_pro, status=200)
+     
 
 
 
