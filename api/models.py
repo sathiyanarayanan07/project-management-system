@@ -12,7 +12,7 @@ class user(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class adminuser(models.Model):
-    username= models.CharField(max_length=100,null=True,blank=True)
+    admin_user= models.CharField(max_length=100,null=True,blank=True)
     password =models.CharField(max_length=100,null=True,blank=True)
 
 class Team(models.Model):

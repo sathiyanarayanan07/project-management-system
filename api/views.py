@@ -132,6 +132,28 @@ def user_profile_details(request):
           return Response(user_pro, status=200)
      
 
+##admin login ##
+@api_view(['POST'])
+def admin_login(request):
+     admin_user = request.data.get("admin_user")
+     password= request.data.get("password")
+
+     if not adminuser or not password:
+          return Response({"msg":"admin user not found"},status=404)
+     
+     admin_log = adminuser.objects.get(
+          admin_user=admin_user,
+          password=password
+
+   
+     )
+     return Response({"msg":"admin login sucessfully",
+                      "admin_user":admin_user,
+                      "password":password},status=200)
+
+     
+     
+
 
 
      
