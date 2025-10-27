@@ -41,9 +41,7 @@ def user_register(request):
                      "password":password,
                      "role_type":role_type},status=200)
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from .models import user  # replace with your actual model name (User, CustomUser, etc.)
+
 
 @api_view(['GET'])
 def user_details(request):
@@ -64,9 +62,6 @@ def user_details(request):
 
 
 
-          
-            
-
 @api_view(['POST'])
 def user_login(request):
     email = request.data.get("email")
@@ -84,6 +79,7 @@ def user_login(request):
     return Response({"msg":"login successfully",
                      "email":email,
                      "role_type":role_type},status=200)
+
              
   
 
