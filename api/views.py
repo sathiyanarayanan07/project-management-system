@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,adminuser,Team
+from .models import user,adminuser,Team,Project
 from .serializers import userSerializer,adminuserSerializer,TeamSerializer
 from django.core.mail import send_mail
 
@@ -44,7 +44,11 @@ def user_register(request):
                      "password":password,
                      "role_type":role_type},status=200)
 
-
+@api_view(['GET'])
+def user_list(request):
+     users=user.objects.all()
+     serializer = userSerializer(users,many=True)
+     return Response(serializer.data)
 
 @api_view(['GET'])
 def user_details(request):
@@ -245,7 +249,71 @@ def team_update(request):
     }, status=200)
 
 
+#create project#
+@api_view(['POST'])
+def create_project(request):
+     project_name =request.data.get("project_name")
+     description = request.data.get("description")
+     team_name= request.data.get("team")
+     members_name= request.data.get("members", [])
+     status =request.data.get("status")
+     start_date =request.data.get("start_date")
+     end_date = request.data.get("end_date")
+
+     if not project_name:
+          return Response({"msg":"project name is required"},status=404)
+     if not team_name:
+          return Response({"msg":"Team name is required"},status=404)
+     if Project.objects.filter(project_name=project_name).exists():
+          return Response({"msg":"project is already exists"},status=404)
+
      
+     team_obj =Team.objects.get(name=team_name)
+     if not team_obj:
+          return Response({"team is not found"},status=404)
+     
+     project_create = Project.objects.create(
+          project_name=project_name,
+          description=description,
+          team =team_obj,
+          status=status,
+          start_date=start_date,
+          end_date=end_date
+
+     )
+
+     member=[]
+     for mem in members_name:
+          try:
+               user_obj =user.objects.get(username=mem)
+               member.append(user_obj)
+          except user.DoesNotExist:
+               return Response({"msg":f"user with name{members_name} not found"},status=404)
+     project_create.members.add(*member)
+     project_create.save()
+     
+     return Response({"msg":"project create sucessfully",
+                      "project_name":project_name,
+                      "description":description,
+                      "team_name":team_name,
+                      "members":members_name,
+                      "status":status,
+                      "start_date":start_date,
+                      "end_date":end_date
+                      },status=200)
+
+#delete project
+@api_view(['DELETE'])
+def project_delete(request,name):
+     projects= Project.objects.filter(project_name=name)
+     if not project_delete:
+          return Response({"msg":f"project {projects} not found"},status=404)
+     projects.delete()
+
+     return Response({"msg":f"project name is {name} delete successfully"},status=200)
+
+
+
      
 
      
@@ -267,7 +335,6 @@ def team_update(request):
 
 
        
-
 
 
 

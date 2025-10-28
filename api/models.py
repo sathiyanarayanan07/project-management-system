@@ -18,7 +18,26 @@ class adminuser(models.Model):
     admin_user= models.CharField(max_length=100,null=True,blank=True)
     password =models.CharField(max_length=100,null=True,blank=True)
 
+    def __str__(self):
+        return self.admin_user
+
 class Team(models.Model):
-    name =models.CharField(max_length=100,null=True,blank=True)
+    name =models.CharField(max_length=100,null=True,blank=True,unique=True)
     description =models.TextField(max_length=100,null=True,blank=True)
     members= models.ManyToManyField(user,blank=True)
+
+    def __str__(self):
+        return f"{self.name}--{self.description}"
+    
+class Project(models.Model):
+    project_name = models.CharField(max_length=50,null=True,blank=True)
+    description = models.TextField(null=True,blank=True)
+    team= models.ForeignKey(Team,null=True,blank=True,on_delete=models.CASCADE)
+    status = models.CharField(max_length=100,null=True,blank=True,default="planning")
+    members= models.ManyToManyField(user,blank=True)
+    start_date= models.DateField(null=True,blank=True)
+    end_date =models.DateField(null=True,blank=True)
+    created_at =models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.project_name
