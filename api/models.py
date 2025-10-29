@@ -46,17 +46,17 @@ class Project(models.Model):
         return self.project_name
     
 class Task(models.Model):
-    Task_name = models.CharField(max_length=100,null=True,blank=True)
-    Task_inform = models.TextField(null=True,blank=True)
-    Task_member =models.ForeignKey(user,on_delete=models.CASCADE,null=True,blank=True)
-    Start_date =models.DateField(auto_now=True)
-    deadline = models.DateField(auto_now=True)
-    status = models.CharField(max_length=100,null=True,blank=True,default="Not Started")
+    task_name = models.CharField(max_length=100,null=True,blank=True)
+    task_inform = models.TextField(null=True,blank=True)
+    task_member =models.ForeignKey(user,on_delete=models.CASCADE,null=True,blank=True)
+    start_date =models.DateField(null=True,blank=True)
+    deadline = models.DateField(null=True,blank=True)
+    status = models.CharField(max_length=100,null=True,blank=True,default="not Started")
     notes = models.TextField(null=True,blank=True)
     create_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.Task_name
+        return self.task_name
     
 
 

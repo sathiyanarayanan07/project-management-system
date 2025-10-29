@@ -335,8 +335,8 @@ def create_project(request):
 
 @api_view(['GET'])
 def project_list(request):
-     users=Project.objects.all()
-     serializer = ProjectSerializer(users,many=True)
+     pro_list=Project.objects.all()
+     serializer = ProjectSerializer(pro_list,many=True)
      return Response(serializer.data)
 
 
@@ -420,6 +420,132 @@ def project_update(request,project_name):
      project_instance.save()
      serializer =ProjectSerializer(project_instance)
      return Response(serializer.data, status=200)
+
+
+#Task#
+@api_view(['POST'])
+def Task_create(request):
+     task_name= request.data.get("task_name")
+     task_inform= request.data.get("task_inform")
+     member_name= request.data.get("task_member")
+     start_date = request.data.get("start_date")
+     deadline = request.data.get("deadline")
+     status = request.data.get("status")
+          
+     assign_task= user.objects.get(username=member_name)
+     if not assign_task:
+          return Response({"msg":"user member not found"},status=404)
+          
+     task_create= Task.objects.create(
+          task_name=task_name,
+          task_inform=task_inform,
+          task_member=assign_task,
+          start_date=start_date,
+          deadline=deadline,
+          status=status
+
+          )
+     return Response({"msg":"Task create sucessfully",
+                       "Task_name":task_name,
+                       "Task_inform":task_inform,
+                       "Task_member":member_name,
+                       "Start_date":start_date,
+                       "deadline":deadline,
+                       "status":status
+                       },status=200)
+
+
+@api_view(['GET'])
+def Task_list(request):
+     users=Task.objects.all()
+     serializer = TaskSerializer(users,many=True)
+     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_Task_details(request):
+     Task_view =Task.objects.all()
+     if not Task_view:
+          return Response({"msg":"Task view not found"},status=404)
+     
+     Task_list=[]
+     for get in Task_view:
+          Task_list.append({
+               "task_name":get.task_name,
+               "Task_inform":get.task_inform,
+               "Task_member":get.task_member.username,
+               "start_date":get.start_date,
+               "deadline":get.deadline,
+               "status":get.status
+          })
+     return Response(Task_list)
+
+
+@api_view(['PATCH'])
+def Task_update(request,task_name):
+     try:
+          task_instance =Task.objects.get(task_name=task_name)
+     except Task.DoesNotExist:
+          return Response({"msg":"Task is not found"},status=404)
+
+     task_name= request.data.get("task_name")
+     task_inform = request.data.get("task_inform")
+     member_name= request.data.get("task_member")
+     start_date= request.data.get("start_date")
+     deadline= request.data.get("deadline")
+     status = request.data.get("status")
+     notes = request.data.get("notes")
+
+
+
+
+     if task_name:
+          task_instance.task_name= task_name
+     if task_inform:
+          task_instance.task_inform= task_inform
+    
+     if start_date:
+          task_instance.start_date = start_date
+     if deadline:
+          task_instance.deadline = deadline
+     if status:
+          task_instance.status= status
+     if notes:
+          task_instance.notes = notes
+
+
+     if member_name:
+          try:
+               assign_user = user.objects.get(username=member_name)
+          except user.DoesNotExist:
+               return Response({"msg":"user is not found"},status=404)
+          task_instance.task_member =assign_user
+     task_instance.save()
+     serializer = TaskSerializer(task_instance)
+     return Response(serializer.data, status=200)
+
+@api_view(['DELETE'])
+def task_delete(request,task_name):
+     task_del =Task.objects.get(task_name=task_name).delete()
+     if not task_del:
+          return Response({"msg":"task is not found"},status=404)
+     return Response({"msg":"task delete successfully"},status=200)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

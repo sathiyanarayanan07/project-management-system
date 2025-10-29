@@ -21,7 +21,13 @@ urlpatterns = [
     path("project_list/",views.project_list,name="project_list"),
     path("get_project_details/",views.get_project_details,name="get_project_details"),
     path("project_delete/<str:name>/",views.project_delete,name="project_delete"),
-    path("project_update/<str:project_name>/",views.project_update,name="project_update")
-
+    path("project_update/<str:project_name>/",views.project_update,name="project_update"),
+    #task
+    path("Task_create/",views.Task_create,name="Task_create"),
+    path("Task_list/",views.Task_list,name="Task_list"),
+    path("get_Task_details/",views.get_Task_details,name="get_Task_details"),
+    path("Task_update/<str:task_name>/",views.Task_update,name="Task_update"),
+    path("task_delete/<str:task_name>/",views.task_delete,name="task_delete")
+    
 
 ]
