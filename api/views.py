@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,adminuser,Team,Project
-from .serializers import userSerializer,adminuserSerializer,TeamSerializer
+from .models import user,adminuser,Team,Project,Task
+from .serializers import userSerializer,adminuserSerializer,TeamSerializer,ProjectSerializer,TaskSerializer
 from django.core.mail import send_mail
 
 # Create your views here.
@@ -89,11 +89,12 @@ def user_login(request):
                      "role_type":role_type},status=200)
 
 @api_view(['PUT'])
-def user_profile(request,email):
+def user_update(request,email):
         try:
              user_instance = user.objects.get(email=email)
         except user.DoesNotExist:
              return Response({"msg":"user not found"},status=404)
+
         user_image =request.FILES.get("user_image")
         username= request.data.get("username")
         email= request.data.get("email")
@@ -115,6 +116,15 @@ def user_profile(request,email):
         user_instance.save()
         serializer = userSerializer(user_instance)
         return Response(serializer.data, status=200)
+
+@api_view(['DELETE'])
+def user_delete(request,email):
+     user_delete = user.objects.filter(email=email)
+     if not user_delete:
+          return Response({"msg":f"user {email}not found "},status=404)
+     
+     user_delete.delete()
+     return Response({"msg":f"user {email} delete sucessfully"})
 
 @api_view(['GET'])
 def user_profile_details(request):
@@ -186,6 +196,27 @@ def create_Team(request):
                       "name":name,
                       "description":description,
                       "members": members_name},status=200)
+
+@api_view(['GET'])
+def team_list(request):
+     users=Team.objects.all()
+     serializer = TeamSerializer(users,many=True)
+     return Response(serializer.data)
+
+@api_view(['GET'])
+def get_team_details(request):
+     team_view =Team.objects.all()
+     if not team_view:
+          return Response({"msg":"Team not found"},status=404)
+     
+     team_list=[]
+     for get in team_view:
+          team_list.append({
+               "name":get.name,
+               "description":get.description,
+               "members":list(get.members.values_list("username",flat=True))
+          })
+     return Response(team_list)
 
 ##Team remove ##
 @api_view(['POST'])
@@ -302,6 +333,34 @@ def create_project(request):
                       "end_date":end_date
                       },status=200)
 
+@api_view(['GET'])
+def project_list(request):
+     users=Project.objects.all()
+     serializer = ProjectSerializer(users,many=True)
+     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_project_details(request):
+     Project_view =Project.objects.all()
+     if not Project_view:
+          return Response({"msg":"Project view not found"},status=404)
+     
+     project_list=[]
+     for get in Project_view:
+          project_list.append({
+               "project_name":get.project_name,
+               "description":get.description,
+               "team":get.team.name,
+               "status":get.status,
+               "members":list(get.members.values_list("username",flat=True)),
+               "start_date":get.start_date,
+               "end_date":get.end_date,
+               "created_at":get.created_at
+          })
+     return Response(project_list)
+
+
 #delete project
 @api_view(['DELETE'])
 def project_delete(request,name):
@@ -311,6 +370,56 @@ def project_delete(request,name):
      projects.delete()
 
      return Response({"msg":f"project name is {name} delete successfully"},status=200)
+
+#projectupdate#
+@api_view(['PATCH'])
+def project_update(request,project_name):
+     try:
+          project_instance =Project.objects.get(project_name=project_name)
+     except Project.DoesNotExist:
+          return Response({"msg":"project is not found"},status=404)
+
+     project_name= request.data.get("project_name")
+     description = request.data.get("description")
+     team_name= request.data.get("team")
+     status= request.data.get("status")
+     members_list= request.data.get("members")
+     start_date = request.data.get("start_date")
+     end_date = request.data.get("end_date")
+
+       
+
+
+     if project_name:
+          project_instance.project_name= project_name
+     if description:
+          project_instance.description= description
+     if status:
+          project_instance.status = status
+     if start_date:
+          project_instance.start_date = start_date
+     if end_date:
+          project_instance.end_date = end_date
+
+     if team_name:
+          try:
+               team_obj = Team.objects.get(name=team_name)
+          except Team.DoesNotExist:
+               return Response({"msg":"team is not found"},status=404)
+          project_instance.team = team_obj
+     
+     if members_list:
+          member =[]
+          for username in members_list:
+               try:
+                    user_obj =user.objects.get(username=username)
+                    member.append(user_obj)
+               except user.DoesNotExist:
+                    return Response({"msg":"user not found"},status=404)
+          project_instance.members.set(member)
+     project_instance.save()
+     serializer =ProjectSerializer(project_instance)
+     return Response(serializer.data, status=200)
 
 
 

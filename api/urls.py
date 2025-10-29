@@ -6,15 +6,22 @@ urlpatterns = [
     path("user_login/",views.user_login,name="user_login"),
     path("user_details/",views.user_details,name="user_details"),
     path("user_list/",views.user_list,name="user_list"),
-    path("user_profile/<str:email>/",views.user_profile,name="user_profile"),
+    path("user_delete/<str:email>/",views.user_delete,name="user_delete"),
+    path("user_profile/<str:email>/",views.user_update,name="user_profile"),
     path("user_profile_details/",views.user_profile_details,name="user_profile_details"),
     path("admin_login/",views.admin_login,name="admin_login"),
+    #team
     path("create_Team/",views.create_Team,name="create_Team"),
     path("remove_team_member/",views.remove_team_member,name="remove_member"),
     path("update_team/",views.team_update,name="update_team"),
+    path("team_list/",views.team_list,name="team_list"),
+    path("get_team_details/",views.get_team_details,name="get_team_details"),
     #project
     path("create_project/",views.create_project,name="create_project"),
-    path("project_delete/<str:name>/",views.project_delete,name="project_delete")
+    path("project_list/",views.project_list,name="project_list"),
+    path("get_project_details/",views.get_project_details,name="get_project_details"),
+    path("project_delete/<str:name>/",views.project_delete,name="project_delete"),
+    path("project_update/<str:project_name>/",views.project_update,name="project_update")
 
 
 ]

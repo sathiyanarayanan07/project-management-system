@@ -2,8 +2,9 @@ from django.db import models
 
 # Create your models here.
 
+
 class user(models.Model):
-    user_image = models.ImageField(max_length=100,null=True,blank=True)
+    user_image = models.ImageField(upload_to="user_image/",null=True,blank=True)
     username= models.CharField(max_length=100,null=True,blank=True)
     email = models.EmailField(max_length=100,null=True,blank =True)
     Phone_number = models.CharField(max_length=10,null=True,blank=True)
@@ -13,6 +14,14 @@ class user(models.Model):
 
     def __str__(self):
         return self.username
+    
+class Team(models.Model):
+    name =models.CharField(max_length=100,null=True,blank=True,unique=True)
+    description =models.TextField(max_length=100,null=True,blank=True)
+    members= models.ManyToManyField(user,blank=True)
+
+    def __str__(self):
+        return f"{self.name}--{self.description}"
 
 class adminuser(models.Model):
     admin_user= models.CharField(max_length=100,null=True,blank=True)
@@ -21,13 +30,7 @@ class adminuser(models.Model):
     def __str__(self):
         return self.admin_user
 
-class Team(models.Model):
-    name =models.CharField(max_length=100,null=True,blank=True,unique=True)
-    description =models.TextField(max_length=100,null=True,blank=True)
-    members= models.ManyToManyField(user,blank=True)
 
-    def __str__(self):
-        return f"{self.name}--{self.description}"
     
 class Project(models.Model):
     project_name = models.CharField(max_length=50,null=True,blank=True)
@@ -41,3 +44,20 @@ class Project(models.Model):
 
     def __str__(self):
         return self.project_name
+    
+class Task(models.Model):
+    Task_name = models.CharField(max_length=100,null=True,blank=True)
+    Task_inform = models.TextField(null=True,blank=True)
+    Task_member =models.ForeignKey(user,on_delete=models.CASCADE,null=True,blank=True)
+    Start_date =models.DateField(auto_now=True)
+    deadline = models.DateField(auto_now=True)
+    status = models.CharField(max_length=100,null=True,blank=True,default="Not Started")
+    notes = models.TextField(null=True,blank=True)
+    create_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.Task_name
+    
+
+
+
