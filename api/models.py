@@ -48,10 +48,12 @@ class Project(models.Model):
 class Task(models.Model):
     task_name = models.CharField(max_length=100,null=True,blank=True)
     task_inform = models.TextField(null=True,blank=True)
-    task_member =models.ForeignKey(user,on_delete=models.CASCADE,null=True,blank=True)
+    task_members =models.ManyToManyField(user,blank=True)
     start_date =models.DateField(null=True,blank=True)
     deadline = models.DateField(null=True,blank=True)
-    status = models.CharField(max_length=100,null=True,blank=True,default="not Started")
+    progress = models.PositiveIntegerField(default=0)
+    priority =models.CharField(default="medium")
+    status = models.CharField(max_length=20,null=True,blank=True,default="open")
     notes = models.TextField(null=True,blank=True)
     create_at = models.DateTimeField(auto_now=True)
 

@@ -427,30 +427,40 @@ def project_update(request,project_name):
 def Task_create(request):
      task_name= request.data.get("task_name")
      task_inform= request.data.get("task_inform")
-     member_name= request.data.get("task_member")
+     member_name= request.data.get("task_members" ,[])
      start_date = request.data.get("start_date")
      deadline = request.data.get("deadline")
+     priority = request.data.get("priority")
      status = request.data.get("status")
-          
-     assign_task= user.objects.get(username=member_name)
-     if not assign_task:
-          return Response({"msg":"user member not found"},status=404)
-          
+   
      task_create= Task.objects.create(
           task_name=task_name,
           task_inform=task_inform,
-          task_member=assign_task,
           start_date=start_date,
           deadline=deadline,
+          priority=priority,
           status=status
 
           )
+     task_member=[]
+     for m in member_name:
+          try:
+               user_obj =user.objects.get(username =m)
+               task_member.append(user_obj)
+          except user.DoesNotExist:
+               return Response({"msg":f"user is not found"},status=404)
+          task_create.task_members.add(*task_member)
+          task_create.save()     
+
+
+
      return Response({"msg":"Task create sucessfully",
                        "Task_name":task_name,
                        "Task_inform":task_inform,
                        "Task_member":member_name,
                        "Start_date":start_date,
                        "deadline":deadline,
+                       "priority":priority,
                        "status":status
                        },status=200)
 
@@ -473,7 +483,8 @@ def get_Task_details(request):
           Task_list.append({
                "task_name":get.task_name,
                "Task_inform":get.task_inform,
-               "Task_member":get.task_member.username,
+               "Task_member":list(get.task_members.values_list("username",flat=True)),
+               "priority":get.priority,
                "start_date":get.start_date,
                "deadline":get.deadline,
                "status":get.status
@@ -490,9 +501,11 @@ def Task_update(request,task_name):
 
      task_name= request.data.get("task_name")
      task_inform = request.data.get("task_inform")
-     member_name= request.data.get("task_member")
+     member_name= request.data.get("task_members")
      start_date= request.data.get("start_date")
      deadline= request.data.get("deadline")
+     progress = request.data.get("progress")
+     priority =request.data.get("priority")
      status = request.data.get("status")
      notes = request.data.get("notes")
 
@@ -503,23 +516,28 @@ def Task_update(request,task_name):
           task_instance.task_name= task_name
      if task_inform:
           task_instance.task_inform= task_inform
-    
      if start_date:
           task_instance.start_date = start_date
      if deadline:
           task_instance.deadline = deadline
+     if progress:
+          task_instance.progress =progress
+     if priority:
+          task_instance.priority =priority
      if status:
           task_instance.status= status
      if notes:
           task_instance.notes = notes
 
-
      if member_name:
-          try:
-               assign_user = user.objects.get(username=member_name)
-          except user.DoesNotExist:
-               return Response({"msg":"user is not found"},status=404)
-          task_instance.task_member =assign_user
+          member =[]
+          for username in member_name:
+               try:
+                    user_obj =user.objects.get(username =username)
+                    member.append(user_obj)
+               except user.DoesNotExist:
+                    return Response({"msg":"user not found"},status=404)
+          task_instance.task_members.set(member)
      task_instance.save()
      serializer = TaskSerializer(task_instance)
      return Response(serializer.data, status=200)
@@ -530,6 +548,9 @@ def task_delete(request,task_name):
      if not task_del:
           return Response({"msg":"task is not found"},status=404)
      return Response({"msg":"task delete successfully"},status=200)
+
+
+
 
 
 
