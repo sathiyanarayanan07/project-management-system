@@ -354,6 +354,7 @@ def get_project_details(request):
                "team":get.team.name,
                "status":get.status,
                "members":list(get.members.values_list("username",flat=True)),
+               "progress":get.progress,
                "start_date":get.start_date,
                "end_date":get.end_date,
                "created_at":get.created_at
@@ -384,6 +385,7 @@ def project_update(request,project_name):
      team_name= request.data.get("team")
      status= request.data.get("status")
      members_list= request.data.get("members")
+     progress = request.data.get("progress")
      start_date = request.data.get("start_date")
      end_date = request.data.get("end_date")
 
@@ -396,6 +398,8 @@ def project_update(request,project_name):
           project_instance.description= description
      if status:
           project_instance.status = status
+     if progress:
+          project_instance.progress =progress
      if start_date:
           project_instance.start_date = start_date
      if end_date:
@@ -425,6 +429,7 @@ def project_update(request,project_name):
 #Task#
 @api_view(['POST'])
 def Task_create(request):
+     project_name = request.data.get("project")
      task_name= request.data.get("task_name")
      task_inform= request.data.get("task_inform")
      member_name= request.data.get("task_members" ,[])
@@ -432,8 +437,14 @@ def Task_create(request):
      deadline = request.data.get("deadline")
      priority = request.data.get("priority")
      status = request.data.get("status")
+
+     try:
+          project_obj= Project.objects.get(project_name=project_name)
+     except Project.DoesNotExist:
+          return Response({"msg":"project not found"},status=404)
    
      task_create= Task.objects.create(
+          project=project_obj,
           task_name=task_name,
           task_inform=task_inform,
           start_date=start_date,
@@ -455,6 +466,7 @@ def Task_create(request):
 
 
      return Response({"msg":"Task create sucessfully",
+                      "project_name":project_name,
                        "Task_name":task_name,
                        "Task_inform":task_inform,
                        "Task_member":member_name,
@@ -481,6 +493,7 @@ def get_Task_details(request):
      Task_list=[]
      for get in Task_view:
           Task_list.append({
+               "project":get.project.project_name if get.project else None,
                "task_name":get.task_name,
                "Task_inform":get.task_inform,
                "Task_member":list(get.task_members.values_list("username",flat=True)),
@@ -498,7 +511,9 @@ def Task_update(request,task_name):
           task_instance =Task.objects.get(task_name=task_name)
      except Task.DoesNotExist:
           return Response({"msg":"Task is not found"},status=404)
-
+     
+     
+     project_name =request.data.get("project")
      task_name= request.data.get("task_name")
      task_inform = request.data.get("task_inform")
      member_name= request.data.get("task_members")
@@ -508,10 +523,14 @@ def Task_update(request,task_name):
      priority =request.data.get("priority")
      status = request.data.get("status")
      notes = request.data.get("notes")
+     try:
+          project_obj = Project.objects.get(project_name=project_name)
+     except Project.DoesNotExist:
+          return Response({"msg":"project not found"},status=404)
 
 
-
-
+     if project_name:
+          task_instance.project =project_obj
      if task_name:
           task_instance.task_name= task_name
      if task_inform:
@@ -548,7 +567,6 @@ def task_delete(request,task_name):
      if not task_del:
           return Response({"msg":"task is not found"},status=404)
      return Response({"msg":"task delete successfully"},status=200)
-
 
 
 

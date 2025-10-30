@@ -38,6 +38,7 @@ class Project(models.Model):
     team= models.ForeignKey(Team,null=True,blank=True,on_delete=models.CASCADE)
     status = models.CharField(max_length=100,null=True,blank=True,default="planning")
     members= models.ManyToManyField(user,blank=True)
+    progress =models.PositiveIntegerField(default=0)
     start_date= models.DateField(null=True,blank=True)
     end_date =models.DateField(null=True,blank=True)
     created_at =models.DateTimeField(auto_now_add=True)
@@ -46,6 +47,7 @@ class Project(models.Model):
         return self.project_name
     
 class Task(models.Model):
+    project =models.ForeignKey(Project,on_delete=models.CASCADE,null=True,blank=True)
     task_name = models.CharField(max_length=100,null=True,blank=True)
     task_inform = models.TextField(null=True,blank=True)
     task_members =models.ManyToManyField(user,blank=True)
@@ -59,6 +61,11 @@ class Task(models.Model):
 
     def __str__(self):
         return self.task_name
+    
+    
+
+    
+
     
 
 
