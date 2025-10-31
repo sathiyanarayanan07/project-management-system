@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,adminuser,Team,Project,Task
-from .serializers import userSerializer,adminuserSerializer,TeamSerializer,ProjectSerializer,TaskSerializer
+from .models import user,adminuser,Team,Project,Task,IndividualTask
+from .serializers import userSerializer,adminuserSerializer,TeamSerializer,ProjectSerializer,TaskSerializer,IndividualTaskSerializer
 from django.core.mail import send_mail
 
 # Create your views here.
@@ -569,47 +569,142 @@ def task_delete(request,task_name):
      return Response({"msg":"task delete successfully"},status=200)
 
 
+#individualTask
+@api_view(['POST'])
+def IndividualTask_create(request):
+    Task_name = request.data.get("Task_name")
+    description = request.data.get("description")
+    member_names = request.data.get("members", [])
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("end_date")
+    status = request.data.get("status")
+    process = request.data.get("process")
+    notes = request.data.get("notes")
+
+    if not Task_name:
+        return Response({"msg": "Task_name is required."}, status=400)
+
+    individual_task = IndividualTask.objects.create(
+        Task_name=Task_name,
+        description=description,
+        start_date=start_date,
+        end_date=end_date,
+        status=status,
+        process=process,
+        notes=notes
+    )
+
+    task_members = []
+    for username in member_names:
+        try:
+            user_obj = user.objects.get(username=username)
+            task_members.append(user_obj)
+        except user.DoesNotExist:
+            return Response(
+                {"msg": f"User '{username}' not found."},
+                status=404
+            )
+
+    if task_members:
+        individual_task.members.add(*task_members)
+        individual_task.save()
+
+    return Response({
+        "msg": "IndividualTask created successfully.",
+        "Task_name": Task_name,
+        "description": description,
+        "members": member_names,
+        "start_date": start_date,
+        "end_date": end_date,
+        "status": status,
+        "process": process,
+        "notes": notes
+    }, status=201)
 
 
 
+@api_view(['GET'])
+def IndividualTask_list(request):
+     users=IndividualTask.objects.all()
+     serializer = IndividualTaskSerializer(users,many=True)
+     return Response(serializer.data)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+@api_view(['GET'])
+def get_IndividualTask_details(request):
+     IndividualTask_view =IndividualTask.objects.all()
+     if not IndividualTask_view:
+          return Response({"msg":"IndividualTask view not found"},status=404)
      
-
-     
-     
-
-          
-     
-
-
-     
-     
-
-
-
-     
-
-             
-  
+     IndividualTask_view_list=[]
+     for get in IndividualTask_view:
+          IndividualTask_view_list.append({
+               "Task_name":get.Task_name,
+               "description":get.description,
+               "members":list(get.members.values_list("username",flat=True)),
+               "start_date":get.start_date,
+               "end_date":get.end_date,
+               "status":get.status,
+               "process":get.process,
+               "notes":get.notes
+          })
+     return Response(IndividualTask_view_list)
 
 
-       
+@api_view(['PATCH'])
+def IndividualTask_update(request, Task_name):
+    task_instance = IndividualTask.objects.filter(Task_name=Task_name).first()
+    if not task_instance:
+        return Response({"msg": "IndividualTask not found."}, status=404)
+
+    new_Task_name = request.data.get("Task_name")
+    description = request.data.get("description")
+    member_names = request.data.get("members", [])
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("end_date")
+    status = request.data.get("status")
+    process = request.data.get("process")
+    notes = request.data.get("notes")
 
 
+    if new_Task_name:
+        task_instance.Task_name = new_Task_name
+    if description:
+        task_instance.description = description
+    if start_date:
+        task_instance.start_date = start_date
+    if end_date:
+        task_instance.end_date = end_date
+    if status:
+        task_instance.status = status
+    if process:
+        task_instance.process = process
+    if notes:
+        task_instance.notes = notes
 
 
+    if member_names:
+        members = []
+        for username in member_names:
+            try:
+                user_obj = user.objects.get(username=username)
+                members.append(user_obj)
+            except user.DoesNotExist:
+                return Response({"msg": f"User '{username}' not found."}, status=404)
+        task_instance.members.set(members)
+
+    task_instance.save()
+    serializer = IndividualTaskSerializer(task_instance)
+    return Response({
+        "msg": "IndividualTask updated successfully.",
+        "data": serializer.data
+    }, status=200)
+
+
+@api_view(['DELETE'])
+def IndividualTask_delete(request,Task_name):
+     task_del =IndividualTask.objects.get(Task_name=Task_name).delete()
+     if not task_del:
+          return Response({"msg":"IndividualTask is not found"},status=404)
+     return Response({"msg":"IndividualTask delete successfully"},status=200)

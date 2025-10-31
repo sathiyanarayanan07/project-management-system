@@ -27,7 +27,14 @@ urlpatterns = [
     path("Task_list/",views.Task_list,name="Task_list"),
     path("get_Task_details/",views.get_Task_details,name="get_Task_details"),
     path("Task_update/<str:task_name>/",views.Task_update,name="Task_update"),
-    path("task_delete/<str:task_name>/",views.task_delete,name="task_delete")
+    path("task_delete/<str:task_name>/",views.task_delete,name="task_delete"),
+    #IndividualTask
+    path("individualTask_create/",views.IndividualTask_create,name="IndividualTask_create"),
+    path("IndividualTask_list/",views.IndividualTask_list,name="IndividualTask_list"),
+    path("get_IndividualTask_details/",views.get_IndividualTask_details,name="get_IndividualTask_details"),
+    path("IndividualTask_update/<str:Task_name>/",views.IndividualTask_update,name="IndividualTask_update"),
+    path("IndividualTask_delete/<str:Task_name>/",views.IndividualTask_delete,name="IndividualTask_delete")
+    
     
 
 ]

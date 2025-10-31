@@ -62,6 +62,18 @@ class Task(models.Model):
     def __str__(self):
         return self.task_name
     
+class IndividualTask(models.Model):
+    Task_name =models.CharField(max_length=100,null=True,blank=True)
+    description=models.TextField(null=True,blank=True)
+    members =models.ManyToManyField(user,blank=True)
+    start_date = models.DateField(null=True,blank=True)
+    end_date =models.DateField(null=True,blank=True)
+    status = models.CharField(max_length=100,null=True,blank=True,default="open")
+    process =models.PositiveIntegerField(null=True,blank=True,default=0)
+    notes =models.TextField(null=True,blank=True)
+
+    def __str__(self):
+        return self.Task_name
     
 
     
