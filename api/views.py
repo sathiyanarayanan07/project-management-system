@@ -243,6 +243,17 @@ def remove_team_member(request):
      return Response({"msg":f"User {team_name} removed from team {member_name} successfully"},status=200)
 
 
+#team Delete
+@api_view(['DELETE'])
+def team_delete(request,name):
+     try:
+          team_del = Team.objects.get(name=name).first()
+          team_del.delete()
+          if not team_del:
+               return Response({"msg":"team not found"},status=404)
+     except Team.DoesNotExist:
+          return Response({"msg":"Team Delete Successfully"},status=200)
+
 ##team update##
 @api_view(['PUT'])
 def team_update(request):

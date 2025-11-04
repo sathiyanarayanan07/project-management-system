@@ -16,6 +16,7 @@ urlpatterns = [
     path("update_team/",views.team_update,name="update_team"),
     path("team_list/",views.team_list,name="team_list"),
     path("get_team_details/",views.get_team_details,name="get_team_details"),
+    path("team_delete/<str:name>/",views.team_delete,name="team_delete"),
     #project
     path("create_project/",views.create_project,name="create_project"),
     path("project_list/",views.project_list,name="project_list"),
