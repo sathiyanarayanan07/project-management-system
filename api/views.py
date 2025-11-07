@@ -1,54 +1,143 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,adminuser,Team,Project,Task,IndividualTask
-from .serializers import userSerializer,adminuserSerializer,TeamSerializer,ProjectSerializer,TaskSerializer,IndividualTaskSerializer
+from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,teamleader_to_members
+from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
+import uuid
 
-# Create your views here.
-
-@api_view(['POST'])
-def user_register(request):
-    username = request.data.get("username")
-    email = request.data.get("email")
-    Phone_number= request.data.get("Phone_number")
-    password = request.data.get("password")
-    role_type = request.data.get("role_type")
-     
-    if not username or not email or not password or not role_type:
-        return Response({"msg":" please fill the details"},status=404)
-    
-    if len(password) < 8:
-         return Response({"message":"password must be at least 8 characters"},status=400)
-            
-    
-    if role_type == "employee":
-        create_user=user.objects.create(
-        username=username,
-        email=email,
-        Phone_number=Phone_number,
-        password=password,
-        role_type=role_type
-    )
-    else:
-        return Response({"msg":"invaild data"},status=404)
-    
-    subject = "Your PMS Account Credentials"
-    message = f"Hello {username},\n\nYour account has been created.\n\nemail: {email}\nPassword: {password}\n\n."
-    send_mail(subject, message, None, [email])
-    
-    return Response({"msg":"user register sucessfully",
-                     "username":username,
-                     "email":email,
-                     "Phone_number":Phone_number,
-                     "password":password,
-                     "role_type":role_type},status=200)
 
 @api_view(['GET'])
 def user_list(request):
      users=user.objects.all()
-     serializer = userSerializer(users,many=True)
+     serializer = userSerializer(user,many=True)
      return Response(serializer.data)
+
+
+@api_view(['GET'])
+def team_list(request):
+     users=Team.objects.all()
+     serializer = TeamSerializer(users,many=True)
+     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def Manager_list(request):
+     users=Manager.objects.all()
+     serializer = ManagerSerializer(Manager,many=True)
+     return Response(serializer.data)
+
+
+
+@api_view(['GET'])
+def TeamLeader_list(request):
+     users=TeamLeader.objects.all()
+     serializer = TeamLeaderSerializer(TeamLeader,many=True)
+     return Response(serializer.data)
+
+
+@api_view(['GET'])
+def Admin_list(request):
+     users=Admin.objects.all()
+     serializer = AdminSerializer(Admin,many=True)
+     return Response(serializer.data)
+
+
+
+
+@api_view(['POST'])
+def Single_login(request):
+    email = request.data.get("email")
+    password = request.data.get("password")
+    role_type = request.data.get("role_type")
+
+    if not email or not password or not role_type:
+        return Response({"msg": "invalid credentials"}, status=400)
+
+    try:
+        if role_type == "employee":
+            login_user = user.objects.get(email=email, password=password, role_type=role_type)
+        elif role_type == "Manager":
+            login_user = Manager.objects.get(email=email, password=password, role_type=role_type)
+        elif role_type == "TeamLeader":
+            login_user = TeamLeader.objects.get(email=email, password=password, role_type=role_type)
+        elif role_type == "Admin":
+            login_user = Admin.objects.get(email=email, password=password, role_type=role_type)
+        else:
+            return Response({"msg": "invalid data"}, status=400)
+
+     
+        return Response({
+            "msg": "login Successfully",
+            "email": login_user.email,
+            "role_type": login_user.role_type
+        }, status=200)
+
+    except ObjectDoesNotExist:
+        return Response({"msg": "Invalid email or password"}, status=401)
+    
+@api_view(['POST'])
+def register_user(request):
+    username= request.data.get("username")
+    email= request.data.get("email")
+    Phone_number=request.data.get("Phone_number")
+    role= request.data.get("role")
+    password= request.data.get("password")
+    role_type=request.data.get("role_type")
+
+    if user.objects.filter(email=email).exists():
+        return Response({"msg":"email already exists"},status=400)
+    
+    try:
+        if role_type == "employee":
+            create_user = user.objects.create(
+                username=username,
+                email=email,
+                Phone_number=Phone_number,
+                role=role,
+                password=password,
+                role_type=role_type
+
+            )
+        elif role_type == "Manager":
+            create_manager = Manager.objects.create(
+                 username=username,
+                 email=email,
+                 Phone_number=Phone_number,
+                 password=password,
+                 role_type=role_type
+                 
+            )
+        elif role_type == "TeamLeader":
+             create_TeamLeader =TeamLeader.objects.create(
+                  username=username,
+                  email=email,
+                  Phone_number=Phone_number,
+                  role=role,
+                  password=password,
+                  role_type=role_type
+             )
+        else:
+            return Response({"msg":"invaild data"},status=400)
+        token =str(uuid.uuid4())
+        subject = "Your PMS Account Credentials",
+        link ="/{token}/{email}"
+        message = f"Hello {username},\n\nYour account has been created.\n\nemail: {email}\nPassword: {password}\n\nrole:{role_type}."
+        send_mail(subject, message,link, None, [email])
+        return Response({"msg":"manager create successfully",
+                         "username":username,
+                         "email":email,
+                         "Phone_number":Phone_number,
+                         "role":role,
+                         "password":password,
+                         "role_type":role_type
+                         },status=200)
+    except Exception as e:
+        return Response({"msg": "Error creating user", "error": str(e)},
+            status=500)
+
+
 
 @api_view(['GET'])
 def user_details(request):
@@ -63,30 +152,13 @@ def user_details(request):
             "username": u.username,
             "email": u.email,
             "password":u.password,
+            "role":u.role,
             "created_at":u.created_at
         })
 
     return Response(data, status=200)
 
 
-
-@api_view(['POST'])
-def user_login(request):
-    email = request.data.get("email")
-    password = request.data.get("password")
-    role_type = request.data.get("role_type")
-    
-    if role_type == "employee":
-            login= user.objects.get(
-            email=email,
-            password=password,
-            role_type= role_type)
-    else:
-         return Response({"msg":"invalid credentials"},status=404)
-    
-    return Response({"msg":"login successfully",
-                     "email":email,
-                     "role_type":role_type},status=200)
 
 @api_view(['PUT'])
 def user_update(request,email):
@@ -95,24 +167,25 @@ def user_update(request,email):
         except user.DoesNotExist:
              return Response({"msg":"user not found"},status=404)
 
-        user_image =request.FILES.get("user_image")
+        profile_image =request.FILES.get("profile_image")
         username= request.data.get("username")
         email= request.data.get("email")
         Phone_number = request.data.get("Phone_number")
+        role =request.data.get("role")
         password = request.data.get("password")
         role_type = request.data.get("role_type")
-        if user_image:
-              user_instance.user_image = user_image
+        if profile_image:
+              user_instance.profile_image = profile_image
         if username:
               user_instance.username= username
         if email:
           user_instance.email = email
         if Phone_number:
             user_instance.Phone_number = Phone_number
+        if role:
+             user_instance.role =role
         if password:
              user_instance.password = password
-        if role_type:
-             user_instance.role_type = role_type
         user_instance.save()
         serializer = userSerializer(user_instance)
         return Response(serializer.data, status=200)
@@ -126,44 +199,27 @@ def user_delete(request,email):
      user_delete.delete()
      return Response({"msg":f"user {email} delete sucessfully"})
 
-@api_view(['GET'])
-def user_profile_details(request):
-     profile_details = user.objects.all()
 
-     if not profile_details:
-          return Response({"msg":"user profile details not found"},status=404)
-     
-     user_pro =[]
-     for up in profile_details:
-          user_pro.append({
-               "username":up.username,
-               "email":up.email,
-               "Phone_number":up.Phone_number,
-               "password":up.password,
-               "role_type":up.role_type
-
-          })
-          return Response(user_pro, status=200)
-     
 
 ##admin login ##
 @api_view(['POST'])
 def admin_login(request):
-     admin_user = request.data.get("admin_user")
+     admin_name = request.data.get("admin_name")
      password= request.data.get("password")
 
-     if not adminuser or not password:
+     if not Admin or not password:
           return Response({"msg":"admin user not found"},status=404)
      
-     admin_log = adminuser.objects.get(
-          admin_user=admin_user,
+     admin_log = Admin.objects.get(
+          admin_name=admin_name,
           password=password
 
    
      )
      return Response({"msg":"admin login sucessfully",
-                      "admin_user":admin_user,
+                      "admin_user":admin_name,
                       "password":password},status=200)
+        
 
 ##Team_create#
 @api_view(['POST'])
@@ -197,11 +253,7 @@ def create_Team(request):
                       "description":description,
                       "members": members_name},status=200)
 
-@api_view(['GET'])
-def team_list(request):
-     users=Team.objects.all()
-     serializer = TeamSerializer(users,many=True)
-     return Response(serializer.data)
+
 
 @api_view(['GET'])
 def get_team_details(request):
@@ -214,33 +266,9 @@ def get_team_details(request):
           team_list.append({
                "name":get.name,
                "description":get.description,
-               "members":list(get.members.values_list("username",flat=True))
+               "members":list(get.members.values_list("username"))
           })
      return Response(team_list)
-
-##Team remove ##
-@api_view(['POST'])
-def remove_team_member(request):
-     team_name = request.data.get("team_name")
-     member_name = request.data.get("member_name")
-
-     if not team_name or not member_name:
-          return Response({"msg":"please provide both team_name and member_name"},status=400)
-     
-     try:
-          team = Team.objects.get(name=team_name)
-     except Team.DoesNotExist:
-          return Response({"msg":f"Team'{team_name}'not found"},status=404)
-     
-     try:
-          member = user.objects.get(username=member_name)
-     except user.DoesNotExist:
-          return Response({"msg":F"user '{member_name}not found"},status=404)
-     
-     team.members.remove(member)
-     team.save()
-
-     return Response({"msg":f"User {team_name} removed from team {member_name} successfully"},status=200)
 
 
 #team Delete
@@ -290,432 +318,270 @@ def team_update(request):
         "members": [m.email for m in team.members.all()]
     }, status=200)
 
-
-#create project#
+#project
 @api_view(['POST'])
-def create_project(request):
-     project_name =request.data.get("project_name")
-     description = request.data.get("description")
-     team_name= request.data.get("team")
-     members_name= request.data.get("members", [])
-     status =request.data.get("status")
-     start_date =request.data.get("start_date")
-     end_date = request.data.get("end_date")
-
-     if not project_name:
-          return Response({"msg":"project name is required"},status=404)
-     if not team_name:
-          return Response({"msg":"Team name is required"},status=404)
-     if Project.objects.filter(project_name=project_name).exists():
-          return Response({"msg":"project is already exists"},status=404)
-
-     
-     team_obj =Team.objects.get(name=team_name)
-     if not team_obj:
-          return Response({"team is not found"},status=404)
-     
-     project_create = Project.objects.create(
-          project_name=project_name,
-          description=description,
-          team =team_obj,
-          status=status,
-          start_date=start_date,
-          end_date=end_date
-
-     )
-
-     member=[]
-     for mem in members_name:
-          try:
-               user_obj =user.objects.get(username=mem)
-               member.append(user_obj)
-          except user.DoesNotExist:
-               return Response({"msg":f"user with name{members_name} not found"},status=404)
-     project_create.members.add(*member)
-     project_create.save()
-     
-     return Response({"msg":"project create sucessfully",
-                      "project_name":project_name,
-                      "description":description,
-                      "team_name":team_name,
-                      "members":members_name,
-                      "status":status,
-                      "start_date":start_date,
-                      "end_date":end_date
-                      },status=200)
-
-@api_view(['GET'])
-def project_list(request):
-     pro_list=Project.objects.all()
-     serializer = ProjectSerializer(pro_list,many=True)
-     return Response(serializer.data)
-
-
-@api_view(['GET'])
-def get_project_details(request):
-     Project_view =Project.objects.all()
-     if not Project_view:
-          return Response({"msg":"Project view not found"},status=404)
-     
-     project_list=[]
-     for get in Project_view:
-          project_list.append({
-               "project_name":get.project_name,
-               "description":get.description,
-               "team":get.team.name,
-               "status":get.status,
-               "members":list(get.members.values_list("username",flat=True)),
-               "progress":get.progress,
-               "start_date":get.start_date,
-               "end_date":get.end_date,
-               "created_at":get.created_at
-          })
-     return Response(project_list)
-
-
-#delete project
-@api_view(['DELETE'])
-def project_delete(request,name):
-     projects= Project.objects.filter(project_name=name)
-     if not project_delete:
-          return Response({"msg":f"project {projects} not found"},status=404)
-     projects.delete()
-
-     return Response({"msg":f"project name is {name} delete successfully"},status=200)
-
-#projectupdate#
-@api_view(['PATCH'])
-def project_update(request,project_name):
+def project_create(request):
      try:
-          project_instance =Project.objects.get(project_name=project_name)
-     except Project.DoesNotExist:
-          return Response({"msg":"project is not found"},status=404)
+          data = request.data
+          name = data.get("name")
+          description=data.get("description")
+          priority=data.get("priority")
+          start_date=data.get("start_date")
+          End_date =data.get("End_date")
+          status=data.get("status")
 
-     project_name= request.data.get("project_name")
-     description = request.data.get("description")
-     team_name= request.data.get("team")
-     status= request.data.get("status")
-     members_list= request.data.get("members")
-     progress = request.data.get("progress")
-     start_date = request.data.get("start_date")
-     end_date = request.data.get("end_date")
-
-       
-
-
-     if project_name:
-          project_instance.project_name= project_name
-     if description:
-          project_instance.description= description
-     if status:
-          project_instance.status = status
-     if progress:
-          project_instance.progress =progress
-     if start_date:
-          project_instance.start_date = start_date
-     if end_date:
-          project_instance.end_date = end_date
-
-     if team_name:
-          try:
-               team_obj = Team.objects.get(name=team_name)
-          except Team.DoesNotExist:
-               return Response({"msg":"team is not found"},status=404)
-          project_instance.team = team_obj
-     
-     if members_list:
-          member =[]
-          for username in members_list:
-               try:
-                    user_obj =user.objects.get(username=username)
-                    member.append(user_obj)
-               except user.DoesNotExist:
-                    return Response({"msg":"user not found"},status=404)
-          project_instance.members.set(member)
-     project_instance.save()
-     serializer =ProjectSerializer(project_instance)
-     return Response(serializer.data, status=200)
-
-
-#Task#
-@api_view(['POST'])
-def Task_create(request):
-     project_name = request.data.get("project")
-     task_name= request.data.get("task_name")
-     task_inform= request.data.get("task_inform")
-     member_name= request.data.get("task_members" ,[])
-     start_date = request.data.get("start_date")
-     deadline = request.data.get("deadline")
-     priority = request.data.get("priority")
-     status = request.data.get("status")
-
-     try:
-          project_obj= Project.objects.get(project_name=project_name)
-     except Project.DoesNotExist:
-          return Response({"msg":"project not found"},status=404)
-   
-     task_create= Task.objects.create(
-          project=project_obj,
-          task_name=task_name,
-          task_inform=task_inform,
-          start_date=start_date,
-          deadline=deadline,
-          priority=priority,
-          status=status
+          create_project =project.objects.create(
+               name=name,
+               description=description,
+               priority=priority,
+               start_date=start_date,
+               End_date=End_date,
+               status=status
 
           )
-     task_member=[]
-     for m in member_name:
-          try:
-               user_obj =user.objects.get(username =m)
-               task_member.append(user_obj)
-          except user.DoesNotExist:
-               return Response({"msg":f"user is not found"},status=404)
-          task_create.task_members.add(*task_member)
-          task_create.save()     
-
-
-
-     return Response({"msg":"Task create sucessfully",
-                      "project_name":project_name,
-                       "Task_name":task_name,
-                       "Task_inform":task_inform,
-                       "Task_member":member_name,
-                       "Start_date":start_date,
-                       "deadline":deadline,
-                       "priority":priority,
-                       "status":status
-                       },status=200)
-
-
-@api_view(['GET'])
-def Task_list(request):
-     users=Task.objects.all()
-     serializer = TaskSerializer(users,many=True)
-     return Response(serializer.data)
-
-
-@api_view(['GET'])
-def get_Task_details(request):
-     Task_view =Task.objects.all()
-     if not Task_view:
-          return Response({"msg":"Task view not found"},status=404)
+          return Response({"msg":"project create successfully",
+                           "name":name,
+                           "description":description,
+                           "priority":priority,
+                           "start_date":start_date,
+                           "End_date":End_date,
+                            "status":status },status=200)
+     except project.DoesNotExist:
+          return Response({"msg":"invaild data"},status=400)
      
-     Task_list=[]
-     for get in Task_view:
-          Task_list.append({
-               "project":get.project.project_name if get.project else None,
-               "task_name":get.task_name,
-               "Task_inform":get.task_inform,
-               "Task_member":list(get.task_members.values_list("username",flat=True)),
-               "priority":get.priority,
-               "start_date":get.start_date,
-               "deadline":get.deadline,
-               "status":get.status
+
+@api_view(['GET'])
+def project_details(request):
+     project_get =project.objects.all()
+     if not project_get:
+          return Response({"msg":"project detail not found"},status=404)
+     
+     proj_list=[]
+     for pro in project_get:
+          proj_list.append({
+               "name":pro.name,
+               "description":pro.description,
+               "priority":pro.priority,
+               "start_date":pro.start_date,
+               "End_date":pro.End_date,
+               "status":pro.status,
+               "create_at":pro.create_at
+               
           })
-     return Response(Task_list)
+     return Response(proj_list,status=200)
 
 
-@api_view(['PATCH'])
-def Task_update(request,task_name):
-     try:
-          task_instance =Task.objects.get(task_name=task_name)
-     except Task.DoesNotExist:
-          return Response({"msg":"Task is not found"},status=404)
-     
-     
-     project_name =request.data.get("project")
-     task_name= request.data.get("task_name")
-     task_inform = request.data.get("task_inform")
-     member_name= request.data.get("task_members")
-     start_date= request.data.get("start_date")
-     deadline= request.data.get("deadline")
-     progress = request.data.get("progress")
-     priority =request.data.get("priority")
-     status = request.data.get("status")
-     notes = request.data.get("notes")
-     try:
-          project_obj = Project.objects.get(project_name=project_name)
-     except Project.DoesNotExist:
-          return Response({"msg":"project not found"},status=404)
+@api_view(['PUT'])
+def project_update(request,name):
+      try:
+             project_instance = project.objects.get(name=name)
+      except project.DoesNotExist:
+             return Response({"msg":"project instance not found"},status=404)
+      
+      name =request.data.get("name")
+      description= request.data.get("description")
+      priority= request.data.get("priority")
+      start_date = request.data.get("start_date")
+      End_date =request.data.get("End_date")
+      status = request.data.get("status")
+      if name:
+           project_instance.name = name
+      if description:
+              project_instance.description= description
+      if priority:
+          project_instance.priority = priority
+      if start_date:
+            project_instance.start_date = start_date
+      if End_date:
+             project_instance.End_date =End_date
+      if status:
+             project_instance.status = status
+             project_instance.save()
+             serializer = userSerializer(project_instance)
+             return Response(serializer.data, status=200)
 
 
-     if project_name:
-          task_instance.project =project_obj
-     if task_name:
-          task_instance.task_name= task_name
-     if task_inform:
-          task_instance.task_inform= task_inform
-     if start_date:
-          task_instance.start_date = start_date
-     if deadline:
-          task_instance.deadline = deadline
-     if progress:
-          task_instance.progress =progress
-     if priority:
-          task_instance.priority =priority
-     if status:
-          task_instance.status= status
-     if notes:
-          task_instance.notes = notes
-
-     if member_name:
-          member =[]
-          for username in member_name:
-               try:
-                    user_obj =user.objects.get(username =username)
-                    member.append(user_obj)
-               except user.DoesNotExist:
-                    return Response({"msg":"user not found"},status=404)
-          task_instance.task_members.set(member)
-     task_instance.save()
-     serializer = TaskSerializer(task_instance)
-     return Response(serializer.data, status=200)
 
 @api_view(['DELETE'])
-def task_delete(request,task_name):
-     task_del =Task.objects.get(task_name=task_name).delete()
-     if not task_del:
-          return Response({"msg":"task is not found"},status=404)
-     return Response({"msg":"task delete successfully"},status=200)
+def project_delete(request,name):
+     project_delete = project.objects.filter(name=name)
+     if not project_delete:
+          return Response({"msg":f"user {name}not found "},status=404)
+     
+     project_delete.delete()
+     return Response({"msg":f"user {name} delete sucessfully"})
 
 
-#individualTask
+
+
+#project_phases#
 @api_view(['POST'])
-def IndividualTask_create(request):
-    Task_name = request.data.get("Task_name")
-    description = request.data.get("description")
-    member_names = request.data.get("members", [])
-    start_date = request.data.get("start_date")
-    end_date = request.data.get("end_date")
-    status = request.data.get("status")
-    process = request.data.get("process")
-    notes = request.data.get("notes")
+def create_phases(request):
+     project_name =request.data.get("project")
+     role= request.data.get("role")
+     team_leader_id =request.data.get("team_leader")
+     status = request.data.get("status")
+     start_date = request.data.get("start_date")
+     end_date = request.data.get("end_date")
 
-    if not Task_name:
-        return Response({"msg": "Task_name is required."}, status=400)
-
-    individual_task = IndividualTask.objects.create(
-        Task_name=Task_name,
-        description=description,
-        start_date=start_date,
-        end_date=end_date,
-        status=status,
-        process=process,
-        notes=notes
-    )
-
-    task_members = []
-    for username in member_names:
-        try:
-            user_obj = user.objects.get(username=username)
-            task_members.append(user_obj)
-        except user.DoesNotExist:
-            return Response(
-                {"msg": f"User '{username}' not found."},
-                status=404
-            )
-
-    if task_members:
-        individual_task.members.add(*task_members)
-        individual_task.save()
-
-    return Response({
-        "msg": "IndividualTask created successfully.",
-        "Task_name": Task_name,
-        "description": description,
-        "members": member_names,
-        "start_date": start_date,
-        "end_date": end_date,
-        "status": status,
-        "process": process,
-        "notes": notes
-    }, status=201)
-
-
-
-@api_view(['GET'])
-def IndividualTask_list(request):
-     users=IndividualTask.objects.all()
-     serializer = IndividualTaskSerializer(users,many=True)
-     return Response(serializer.data)
-
-
-
-@api_view(['GET'])
-def get_IndividualTask_details(request):
-     IndividualTask_view =IndividualTask.objects.all()
-     if not IndividualTask_view:
-          return Response({"msg":"IndividualTask view not found"},status=404)
+     project_instance = project.objects.get(name=project_name)
+     if not project_instance:
+          return Response({"msg":"project not found"},status=404)
+     TL_instance =user.objects.get(id=team_leader_id)
+     if not TL_instance:
+          return Response({"msg":"user not found"},status=404)
+  
      
-     IndividualTask_view_list=[]
-     for get in IndividualTask_view:
-          IndividualTask_view_list.append({
-               "Task_name":get.Task_name,
-               "description":get.description,
-               "members":list(get.members.values_list("username",flat=True)),
-               "start_date":get.start_date,
-               "end_date":get.end_date,
-               "status":get.status,
-               "process":get.process,
-               "notes":get.notes
+     if TL_instance.role_type!="TeamLeader":
+          TL_instance.role_type = "TeamLeader"
+          TL_instance.save()
+
+     if not TeamLeader.objects.filter(email=TL_instance.email).exists():
+            TeamLeader.objects.create(
+                profile_image=TL_instance.profile_image,
+                username=TL_instance.username,
+                email=TL_instance.email,
+                Phone_number=TL_instance.Phone_number,
+                password=TL_instance.password,
+                role_type="TeamLeader"
+            )
+     
+     create_phases= Phase.objects.create(
+        project=project_instance,
+        role=role,
+        team_leader=TL_instance,
+        status=status,
+        start_date= start_date,
+        end_date=end_date
+
+     )
+     return Response({"msg":"phases create sucessfully"},status=200)
+
+
+
+
+@api_view(['GET'])
+def get_phases_details(request):
+     phase_obj =Phase.objects.all()
+     if not phase_obj:
+          return Response({"msg":"phase is not found"},status=400)
+     
+     phase_list=[]
+     for phas in phase_obj:
+          phase_list.append({
+               "project":phas.project.name,
+               "description":phas.project.description,
+               "role":phas.role,
+               "team_leader":phas.team_leader.username if phas.team_leader else None,
+               "priority":phas.project.priority,
+               "status":phas.status,
+               "progress":phas.progress,
+               "start_date":phas.start_date,
+               "end_date":phas.end_date
+
+
+
           })
-     return Response(IndividualTask_view_list)
+     return Response(phase_list,status=200)
 
 
-@api_view(['PATCH'])
-def IndividualTask_update(request, Task_name):
-    task_instance = IndividualTask.objects.filter(Task_name=Task_name).first()
-    if not task_instance:
-        return Response({"msg": "IndividualTask not found."}, status=404)
 
-    new_Task_name = request.data.get("Task_name")
-    description = request.data.get("description")
-    member_names = request.data.get("members", [])
+@api_view(['PUT'])
+def Phase_update(request, role):
+    try:
+        Phase_instance = Phase.objects.get(role=role)
+    except Phase.DoesNotExist:
+        return Response({"msg": "Phase instance not found"}, status=404)
+
+    project_name = request.data.get("project")
+    new_role = request.data.get("role")
+    team_leader_name = request.data.get("team_leader")
+    status = request.data.get("status")
+    progress = request.data.get("progress")
     start_date = request.data.get("start_date")
     end_date = request.data.get("end_date")
-    status = request.data.get("status")
-    process = request.data.get("process")
-    notes = request.data.get("notes")
 
+    if project_name:
+        try:
+            project_instance = project.objects.get(name=project_name)
+            Phase_instance.project = project_instance
+        except project.DoesNotExist:
+            return Response({"msg": "Project not found"}, status=404)
 
-    if new_Task_name:
-        task_instance.Task_name = new_Task_name
-    if description:
-        task_instance.description = description
-    if start_date:
-        task_instance.start_date = start_date
-    if end_date:
-        task_instance.end_date = end_date
+    if team_leader_name:
+        try:
+            team_leader_instance = user.objects.get(username=team_leader_name)
+            Phase_instance.team_leader = team_leader_instance
+        except user.DoesNotExist:
+            return Response({"msg": "Team Leader not found"}, status=404)
+
+    # Update other fields
+    if new_role:
+        Phase_instance.role = new_role
     if status:
-        task_instance.status = status
-    if process:
-        task_instance.process = process
-    if notes:
-        task_instance.notes = notes
+        Phase_instance.status = status
+    if progress:
+        Phase_instance.progress = progress
+    if start_date:
+        Phase_instance.start_date = start_date
+    if end_date:
+        Phase_instance.end_date = end_date
+
+    Phase_instance.save()
+    serializer = PhaseSerializer(Phase_instance)
+    return Response(serializer.data, status=200)
 
 
-    if member_names:
-        members = []
-        for username in member_names:
-            try:
-                user_obj = user.objects.get(username=username)
-                members.append(user_obj)
-            except user.DoesNotExist:
-                return Response({"msg": f"User '{username}' not found."}, status=404)
-        task_instance.members.set(members)
+#phases#
+@api_view(['POST'])
+def teamleader_assign_to_member(request):
+          phase_id =request.data.get("Phase")
+          assigned_to_username = request.data.get("assigned_to")
+          status= request.data.get("status")
+          try:
+               phase_instance =Phase.objects.get(id=phase_id)
+          except Phase.DoesNotexist:
+               return Response({"msg":"phase not found"},status=404)
+          try:
+               member_instance =user.objects.get(username=assigned_to_username)
+          except user.DoesNotExist:
+               return Response({"msg":"user not found"},status=404)
+          
+          assign_phase = teamleader_to_members.objects.create(
+               Phase=phase_instance,
+               assigned_to=member_instance,
+               status=status
+          )
+          return Response({"msg":"phase assign to team member",
+                           "Phase":phase_instance.id,
+                           "assigned_to_member":member_instance.username,
+                           "status":status},status=200)
+          
 
-    task_instance.save()
-    serializer = IndividualTaskSerializer(task_instance)
-    return Response({
-        "msg": "IndividualTask updated successfully.",
-        "data": serializer.data
-    }, status=200)
+@api_view(['GET'])
+def teamleader_to_member(request):
+     assignments =teamleader_to_members.objects.all()
+     if not assignments:
+          return Response({"msg":"assign member not found"},status=404)
+     
+     get=[]
+     for a in assignments:
+          get.append({
+               "Phase":a.Phase.project.name,
+               "assigned_to":a.assigned_to.username,
+               "status":a.status,
+               "start_date":a.Phase.start_date,
+               "end_date":a.Phase.end_date
+
+          })
+     return Response(get,status=200)
+     
 
 
-@api_view(['DELETE'])
-def IndividualTask_delete(request,Task_name):
-     task_del =IndividualTask.objects.get(Task_name=Task_name).delete()
-     if not task_del:
-          return Response({"msg":"IndividualTask is not found"},status=404)
-     return Response({"msg":"IndividualTask delete successfully"},status=200)
+
+
+
+
+
+
+    

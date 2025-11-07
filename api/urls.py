@@ -2,40 +2,46 @@ from django.urls import path
 from .import views   
 
 urlpatterns = [
-    path("register/",views.user_register,name="register"),
-    path("user_login/",views.user_login,name="user_login"),
+     path("user_list/",views.user_list,name="user_list"),
+     path("Manager_list/",views.Manager_list,name="Manager_list"),
+     path("TeamLeader_list/",views.TeamLeader_list,name="TeamLeader_list"),
+     path("Admin_list/",views.Admin_list,name="Admin_list"),
+    #login#
+    path("single_login/",views.Single_login,name="single_login"),
+    #user#
+    path("create_user/",views.register_user,name="create_user"),
     path("user_details/",views.user_details,name="user_details"),
-    path("user_list/",views.user_list,name="user_list"),
+    path("user_update/<str:email>/",views.user_update,name="user_update"),
     path("user_delete/<str:email>/",views.user_delete,name="user_delete"),
-    path("user_profile/<str:email>/",views.user_update,name="user_profile"),
-    path("user_profile_details/",views.user_profile_details,name="user_profile_details"),
+    #adminlogin
     path("admin_login/",views.admin_login,name="admin_login"),
+    # #manager
+    # path("manager_details/",views.manager_details,name="manager_details"),
+    # path("manager_update/<str:email>",views.manager_update,name="manager_update"),
+    # path("Manager_delete/<str:email>/",views.Manager_delete,name="Manager_delete"),
+    # #teamleader
+    # path("TeamLeader_delete/<str:email>/",views.TeamLeader_delete,name="TeamLeader_delete"),
+    # path("TeamLeader_update/<str:email>",views.TeamLeader_update,name="TeamLeader_update"),
+    # path("TeamLeader_details/",views.TeamLeader_details,name="TeamLeader_details"),
+
+
     #team
     path("create_Team/",views.create_Team,name="create_Team"),
-    path("remove_team_member/",views.remove_team_member,name="remove_member"),
-    path("update_team/",views.team_update,name="update_team"),
     path("team_list/",views.team_list,name="team_list"),
     path("get_team_details/",views.get_team_details,name="get_team_details"),
     path("team_delete/<str:name>/",views.team_delete,name="team_delete"),
+    path("team_update/",views.team_update,name="team_update"),
     #project
-    path("create_project/",views.create_project,name="create_project"),
-    path("project_list/",views.project_list,name="project_list"),
-    path("get_project_details/",views.get_project_details,name="get_project_details"),
+    path("project_create/",views.project_create,name="project_create"),
+    path("project_details/",views.project_details,name="project_details"),
+    path("project_update/<str:name>/",views.project_update,name="project_update"),
     path("project_delete/<str:name>/",views.project_delete,name="project_delete"),
-    path("project_update/<str:project_name>/",views.project_update,name="project_update"),
-    #task
-    path("Task_create/",views.Task_create,name="Task_create"),
-    path("Task_list/",views.Task_list,name="Task_list"),
-    path("get_Task_details/",views.get_Task_details,name="get_Task_details"),
-    path("Task_update/<str:task_name>/",views.Task_update,name="Task_update"),
-    path("task_delete/<str:task_name>/",views.task_delete,name="task_delete"),
-    #IndividualTask
-    path("individualTask_create/",views.IndividualTask_create,name="IndividualTask_create"),
-    path("IndividualTask_list/",views.IndividualTask_list,name="IndividualTask_list"),
-    path("get_IndividualTask_details/",views.get_IndividualTask_details,name="get_IndividualTask_details"),
-    path("IndividualTask_update/<str:Task_name>/",views.IndividualTask_update,name="IndividualTask_update"),
-    path("IndividualTask_delete/<str:Task_name>/",views.IndividualTask_delete,name="IndividualTask_delete")
-    
+    #phase
+    path("create_phases/",views.create_phases,name="create_phases"),
+    path("get_phases_details/",views.get_phases_details,name="get_phases_details"),
+    path("Phase_update/<str:role>/",views.Phase_update,name="Phase_update"),
+    path("phaseassign_to_member/",views.teamleader_assign_to_member,name="phaseassign_to_member"),
+    path("details_assign_to_members/",views.teamleader_to_member,name="details_assign_to_members")
     
 
 ]
