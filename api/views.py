@@ -523,7 +523,7 @@ def project_delete(request,name):
           return Response({"msg":f"user {name}not found "},status=404)
      
      project_delete.delete()
-     return Response({"msg":f"user {name} delete sucessfully"})
+     return Response({"msg":f"user {name} delete sucessfully"},status=200)
 
 
 
@@ -601,7 +601,7 @@ def get_phases_details(request):
 
 
 @api_view(['PUT'])
-def Phase_update(request, role):
+def Phase_update(request,role):
     try:
         Phase_instance = Phase.objects.get(role=role)
     except Phase.DoesNotExist:
@@ -629,7 +629,6 @@ def Phase_update(request, role):
         except user.DoesNotExist:
             return Response({"msg": "Team Leader not found"}, status=404)
 
-    # Update other fields
     if new_role:
         Phase_instance.role = new_role
     if status:
@@ -645,6 +644,15 @@ def Phase_update(request, role):
     serializer = PhaseSerializer(Phase_instance)
     return Response(serializer.data, status=200)
 
+
+@api_view(['DELETE'])
+def Phase_delete(request,role):
+     Phase_delete = Phase.objects.filter(role=role)
+     if not Phase_delete:
+          return Response({"msg":f"user {role}not found "},status=404)
+     
+     Phase_delete.delete()
+     return Response({"msg":f"user {role} delete sucessfully"})
 
 #phases#
 @api_view(['POST'])

@@ -40,6 +40,7 @@ urlpatterns = [
     path("create_phases/",views.create_phases,name="create_phases"),
     path("get_phases_details/",views.get_phases_details,name="get_phases_details"),
     path("Phase_update/<str:role>/",views.Phase_update,name="Phase_update"),
+    path("Phase_delete/<str:role>/",views.Phase_delete,name="Phase_delete"),
     path("phaseassign_to_member/",views.teamleader_assign_to_member,name="phaseassign_to_member"),
     path("details_assign_to_members/",views.teamleader_to_member,name="details_assign_to_members")
     
