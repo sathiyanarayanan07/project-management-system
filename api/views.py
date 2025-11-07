@@ -201,6 +201,120 @@ def user_delete(request,email):
 
 
 
+@api_view(['GET'])
+def manager_details(request):
+    users = Manager.objects.all()
+
+    if not Manager.exists():
+        return Response({"msg": "No users found"}, status=404)
+
+    data = []
+    for u in users:
+        data.append({
+            "username": u.username,
+            "email": u.email,
+            "password":u.password,
+            "created_at":u.created_at
+        })
+
+    return Response(data, status=200)
+
+
+@api_view(['PUT'])
+def manager_update(request,email):
+        try:
+             user_instance = Manager.objects.get(email=email)
+        except Manager.DoesNotExist:
+             return Response({"msg":"user not found"},status=404)
+
+        profile_image =request.FILES.get("profile_image")
+        username= request.data.get("username")
+        email= request.data.get("email")
+        Phone_number = request.data.get("Phone_number")
+        password = request.data.get("password")
+        role_type = request.data.get("role_type")
+        if profile_image:
+              user_instance.user_image = profile_image
+        if username:
+              user_instance.username= username
+        if email:
+          user_instance.email = email
+        if Phone_number:
+            user_instance.Phone_number = Phone_number
+        if password:
+             user_instance.password = password
+        if role_type:
+             user_instance.role_type = role_type
+        user_instance.save()
+        serializer = userSerializer(user_instance)
+        return Response(serializer.data, status=200)
+
+@api_view(['DELETE'])
+def Manager_delete(request,email):
+     user_delete = Manager.objects.filter(email=email)
+     if not user_delete:
+          return Response({"msg":f"user {email}not found "},status=404)
+     
+     user_delete.delete()
+     return Response({"msg":f"user {email} delete sucessfully"})
+
+@api_view(['GET'])
+def TeamLeader_details(request):
+    users = TeamLeader.objects.all()
+
+    if not TeamLeader:
+        return Response({"msg": "No users found"}, status=404)
+
+    data = []
+    for u in users:
+        data.append({
+            "username": u.username,
+            "email": u.email,
+            "password":u.password,
+            "created_at":u.created_at
+        })
+
+    return Response(data, status=200)
+
+
+@api_view(['PUT'])
+def TeamLeader_update(request,email):
+        try:
+             user_instance = TeamLeader.objects.get(email=email)
+        except TeamLeader.DoesNotExist:
+             return Response({"msg":"user not found"},status=404)
+
+        profile_image =request.FILES.get("profile_image")
+        username= request.data.get("username")
+        email= request.data.get("email")
+        Phone_number = request.data.get("Phone_number")
+        password = request.data.get("password")
+        role_type = request.data.get("role_type")
+        if profile_image:
+              user_instance.user_image = profile_image
+        if username:
+              user_instance.username= username
+        if email:
+          user_instance.email = email
+        if Phone_number:
+            user_instance.Phone_number = Phone_number
+        if password:
+             user_instance.password = password
+        if role_type:
+             user_instance.role_type = role_type
+        user_instance.save()
+        serializer = TeamLeaderSerializer(user_instance)
+        return Response(serializer.data, status=200)
+
+@api_view(['DELETE'])
+def TeamLeader_delete(request,email):
+     user_delete = TeamLeader.objects.filter(email=email)
+     if not user_delete:
+          return Response({"msg":f"user {email}not found "},status=404)
+     
+     user_delete.delete()
+     return Response({"msg":f"user {email} delete sucessfully"},status=200)
+
 ##admin login ##
 @api_view(['POST'])
 def admin_login(request):
