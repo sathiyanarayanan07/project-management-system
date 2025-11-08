@@ -50,6 +50,9 @@ urlpatterns = [
     path("get_teamleader_assignments/",views.get_teamleader_assignments,name="details_assign_to_members"),
     path("update_teamleader_assignment/<int:id>/",views.update_teamleader_assignment,name="update_to_assign"),
     path("delete_TeamLeaderAssignment/<int:id>/",views.delete_TeamLeaderAssignment,name="delete_members_assignment"),
+
+
+    path("create_task",views.create_task,name="create_task")
     
 
 ]

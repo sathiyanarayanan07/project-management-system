@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment,Category
+from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task
 from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
@@ -828,39 +828,39 @@ def delete_TeamLeaderAssignment(request,id):
           return Response({"msg":"members not found"},status=404)
      
 
+
 @api_view(['POST'])
-def create_Team(request):
-     project=request.data.get("project")
-     name=request.data.get("name")
-     description=request.data.get("description")
-     start_date=request.data.get("start_date")
-     description=request.data.get("end_date")
-     description=request.data.get("assigned_to")
+def create_task(request):
+    project_id = request.data.get("project")
+    name = request.data.get("name")
+    description = request.data.get("description")
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("end_date")
+    assigned_to_username = request.data.get("assigned_to")
 
-     if not name or not description :
-          return Response({"msg":"please fill the all requied fields"},status=404)
-     
-     
+    if not all([project_id, name, description, assigned_to_username]):
+        return Response({"msg": "Please fill in all required fields"}, status=400)
 
-     Category_create = Category.objects.create(
-          name = name,
-          description= description
-     )
-  
-     return Response({"msg":"Category create sucessfully",
-                      "name":name,
-                      "description":description
-                      },status=200)
+    try:
+        project_instance = project.objects.get(id=project_id)
+    except project.DoesNotExist:
+        return Response({"msg": "Project not found"}, status=404)
 
+    try:
+        assigned_to_instance = user.objects.get(username=assigned_to_username)
+    except user.DoesNotExist:
+        return Response({"msg": "Assigned user not found"}, status=404)
 
+    task = Task.objects.create(
+        project=project_instance,
+        name=name,
+        description=description,
+        start_date=start_date,
+        end_date=end_date,
+        assigned_to=assigned_to_instance
+    )
 
-     
-
-
-
-
-
-
-
-
-    
+    return Response({
+        "msg": "Task created successfully",
+        "task_id": task.id
+    }, status=201)
