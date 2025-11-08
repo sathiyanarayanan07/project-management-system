@@ -41,8 +41,11 @@ urlpatterns = [
     path("get_phases_details/",views.get_phases_details,name="get_phases_details"),
     path("Phase_update/<str:role>/",views.Phase_update,name="Phase_update"),
     path("Phase_delete/<str:role>/",views.Phase_delete,name="Phase_delete"),
-    path("phaseassign_to_member/",views.teamleader_assign_to_member,name="phaseassign_to_member"),
-    path("details_assign_to_members/",views.teamleader_to_member,name="details_assign_to_members")
+
+    path("create_teamleader_assignment/",views.create_teamleader_assignment,name="phaseassign_to_member"),
+    path("get_teamleader_assignments/",views.get_teamleader_assignments,name="details_assign_to_members"),
+    path("update_teamleader_assignment/<int:id>/",views.update_teamleader_assignment,name="update_to_assign"),
+    path("delete_TeamLeaderAssignment/<int:id>/",views.delete_TeamLeaderAssignment,name="delete_members_assignment")
     
 
 ]

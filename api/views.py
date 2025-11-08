@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,teamleader_to_members
+from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment
 from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
@@ -234,7 +234,7 @@ def manager_update(request,email):
         password = request.data.get("password")
         role_type = request.data.get("role_type")
         if profile_image:
-              user_instance.user_image = profile_image
+              user_instance.profile_image = profile_image
         if username:
               user_instance.username= username
         if email:
@@ -291,7 +291,7 @@ def TeamLeader_update(request,email):
         password = request.data.get("password")
         role_type = request.data.get("role_type")
         if profile_image:
-              user_instance.user_image = profile_image
+              user_instance.profile_image = profile_image
         if username:
               user_instance.username= username
         if email:
@@ -654,49 +654,115 @@ def Phase_delete(request,role):
      Phase_delete.delete()
      return Response({"msg":f"user {role} delete sucessfully"})
 
-#phases#
 @api_view(['POST'])
-def teamleader_assign_to_member(request):
-          phase_id =request.data.get("Phase")
-          assigned_to_username = request.data.get("assigned_to")
-          status= request.data.get("status")
-          try:
-               phase_instance =Phase.objects.get(id=phase_id)
-          except Phase.DoesNotexist:
-               return Response({"msg":"phase not found"},status=404)
-          try:
-               member_instance =user.objects.get(username=assigned_to_username)
-          except user.DoesNotExist:
-               return Response({"msg":"user not found"},status=404)
-          
-          assign_phase = teamleader_to_members.objects.create(
-               Phase=phase_instance,
-               assigned_to=member_instance,
-               status=status
-          )
-          return Response({"msg":"phase assign to team member",
-                           "Phase":phase_instance.id,
-                           "assigned_to_member":member_instance.username,
-                           "status":status},status=200)
+def create_teamleader_assignment(request):
+    project_id = request.data.get("project")
+    assigned_by_username = request.data.get("assigned_by")
+    assigned_to_username = request.data.get("assigned_to")
+    is_self_assigned = request.data.get("is_self_assigned", False)
+
+    try:
+        project_instance = project.objects.get(id=project_id)
+    except project.DoesNotExist:
+        return Response({"msg": "Project not found"}, status=404)
+
+    try:
+        assigned_by_instance = TeamLeader.objects.get(username=assigned_by_username)
+    except TeamLeader.DoesNotExist:
+        return Response({"msg": "Assigned_by user not found"}, status=404)
+
+    try:
+        assigned_to_instance = user.objects.get(username=assigned_to_username)
+    except user.DoesNotExist:
+        return Response({"msg": "Assigned_to user not found"}, status=404)
+
+
+    assignment = TeamLeaderAssignment.objects.create(
+        project=project_instance,
+        assigned_by=assigned_by_instance,
+        assigned_to=assigned_to_instance,
+        is_self_assigned=is_self_assigned
+    )
+
+    serializer = teamleader_to_membersSerializer(assignment)
+    return Response(serializer.data, status=201)
+
           
 
 @api_view(['GET'])
-def teamleader_to_member(request):
-     assignments =teamleader_to_members.objects.all()
-     if not assignments:
-          return Response({"msg":"assign member not found"},status=404)
-     
-     get=[]
-     for a in assignments:
-          get.append({
-               "Phase":a.Phase.project.name,
-               "assigned_to":a.assigned_to.username,
-               "status":a.status,
-               "start_date":a.Phase.start_date,
-               "end_date":a.Phase.end_date
+def get_teamleader_assignments(request):
+    assignments = TeamLeaderAssignment.objects.all()
+    if not assignments.exists():
+        return Response({"msg": "No team leader assignments found"}, status=404)
 
-          })
-     return Response(get,status=200)
+    data = []
+    for assignment in assignments:
+        data.append({
+            "project": assignment.project.name,
+            "assigned_by": assignment.assigned_by.username,
+            "assigned_to": assignment.assigned_to.username,
+            "assigned_at": assignment.assigned_at,
+            "is_self_assigned": assignment.is_self_assigned
+        })
+
+    return Response(data, status=200)
+
+
+@api_view(['PUT'])
+def update_teamleader_assignment(request, id):
+    try:
+        assignment = TeamLeaderAssignment.objects.get(id=id)
+    except TeamLeaderAssignment.DoesNotExist:
+        return Response({"msg": "Team leader assignment not found"}, status=404)
+
+    project_id = request.data.get("project")
+    assigned_by_username = request.data.get("assigned_by")
+    assigned_to_username = request.data.get("assigned_to")
+    is_self_assigned = request.data.get("is_self_assigned")
+
+    if project_id:
+        try:
+            project_instance = project.objects.get(id=project_id)
+            assignment.project = project_instance
+        except project.DoesNotExist:
+            return Response({"msg": "Project not found"}, status=404)
+
+    if assigned_by_username:
+        try:
+            assigned_by_instance = TeamLeader.objects.get(username=assigned_by_username)
+            assignment.assigned_by = assigned_by_instance
+        except TeamLeader.DoesNotExist:
+            return Response({"msg": "Assigned_by user not found"}, status=404)
+
+    if assigned_to_username:
+        try:
+            assigned_to_instance = user.objects.get(username=assigned_to_username)
+            assignment.assigned_to = assigned_to_instance
+        except user.DoesNotExist:
+            return Response({"msg": "Assigned_to user not found"}, status=404)
+
+    if is_self_assigned is not None:
+        assignment.is_self_assigned = bool(is_self_assigned)
+
+    assignment.save()
+    serializer = teamleader_to_membersSerializer(assignment)
+    return Response(serializer.data, status=200)
+
+@api_view(['DELETE'])
+def delete_TeamLeaderAssignment(request,id):
+     try:
+         del_assign = TeamLeaderAssignment.objects.get(id=id)
+         del_assign.delete()
+         return Response({"msg":"delete successfully"},status=200)
+     except TeamLeaderAssignment.DoesNotExist:
+          return Response({"msg":"members not found"},status=404)
+     
+
+
+
+          
+
+
      
 
 
