@@ -6,8 +6,12 @@ urlpatterns = [
      path("Manager_list/",views.Manager_list,name="Manager_list"),
      path("TeamLeader_list/",views.TeamLeader_list,name="TeamLeader_list"),
      path("Admin_list/",views.Admin_list,name="Admin_list"),
+     path("Category_list/",views.Category_list,name="Category_list"),
+     path("category_create/",views.category_create,name="category_create"),
+     path("Category_delete/<str:name>/",views.Category_delete,name="Category_delete"),
     #login#
     path("single_login/",views.Single_login,name="single_login"),
+    path("am_login/",views.AM_login,name="admin_manager_login"),
     #user#
     path("create_user/",views.register_user,name="create_user"),
     path("user_details/",views.user_details,name="user_details"),
@@ -45,7 +49,7 @@ urlpatterns = [
     path("create_teamleader_assignment/",views.create_teamleader_assignment,name="phaseassign_to_member"),
     path("get_teamleader_assignments/",views.get_teamleader_assignments,name="details_assign_to_members"),
     path("update_teamleader_assignment/<int:id>/",views.update_teamleader_assignment,name="update_to_assign"),
-    path("delete_TeamLeaderAssignment/<int:id>/",views.delete_TeamLeaderAssignment,name="delete_members_assignment")
+    path("delete_TeamLeaderAssignment/<int:id>/",views.delete_TeamLeaderAssignment,name="delete_members_assignment"),
     
 
 ]

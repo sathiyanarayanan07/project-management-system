@@ -1,11 +1,44 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment
-from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer
+from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment,Category
+from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 import uuid
+
+
+@api_view(['GET'])
+def Category_list(request):
+     users=Category.objects.all()
+     serializer = CategorySerializer(users,many=True)
+     return Response(serializer.data)
+
+@api_view(['POST'])
+def category_create(request):
+     data=request.data
+     name=request.data.get("name")
+     description = data.get("description")
+
+     if not name or not description:
+          return Response({"msg":"please fill all required fields"},status=400)
+
+     create_category=Category.objects.create(
+          name=name,
+          description=description
+     )
+     return Response({"msg":"create category successfully"},status=200)
+
+@api_view(['DELETE'])
+def Category_delete(request,name):
+     Category_delete = Category.objects.filter(name=name)
+     if not user_delete:
+          return Response({"msg":f"category {name}not found "},status=404)
+     
+     Category_delete.delete()
+     return Response({"msg":f"category {name} delete sucessfully"},status=200)
+
+
 
 
 @api_view(['GET'])
@@ -58,10 +91,36 @@ def Single_login(request):
     try:
         if role_type == "employee":
             login_user = user.objects.get(email=email, password=password, role_type=role_type)
-        elif role_type == "Manager":
-            login_user = Manager.objects.get(email=email, password=password, role_type=role_type)
         elif role_type == "TeamLeader":
             login_user = TeamLeader.objects.get(email=email, password=password, role_type=role_type)
+        else:
+            return Response({"msg": "invalid data"}, status=400)
+
+     
+        return Response({
+            "msg": "login Successfully",
+            "email": login_user.email,
+            "role_type": login_user.role_type
+        }, status=200)
+
+    except ObjectDoesNotExist:
+        return Response({"msg": "Invalid email or password"}, status=401)
+    
+
+
+
+@api_view(['POST'])
+def AM_login(request):
+    email = request.data.get("email")
+    password = request.data.get("password")
+    role_type = request.data.get("role_type")
+
+    if not email or not password or not role_type:
+        return Response({"msg": "invalid credentials"}, status=400)
+
+    try:
+        if role_type == "Manager":
+            login_user = Manager.objects.get(email=email, password=password, role_type=role_type)
         elif role_type == "Admin":
             login_user = Admin.objects.get(email=email, password=password, role_type=role_type)
         else:
@@ -77,6 +136,8 @@ def Single_login(request):
     except ObjectDoesNotExist:
         return Response({"msg": "Invalid email or password"}, status=401)
     
+
+
 @api_view(['POST'])
 def register_user(request):
     username= request.data.get("username")
@@ -442,13 +503,20 @@ def project_create(request):
           priority=data.get("priority")
           start_date=data.get("start_date")
           End_date =data.get("End_date")
+          category_name=data.get("category")
           status=data.get("status")
+
+          try:
+               category_instance =Category.objects.get(name=category_name)
+          except Category.DoesNotExist:
+               return Response({"msg":"category not found"},status=404)
 
           create_project =project.objects.create(
                name=name,
                description=description,
                priority=priority,
                start_date=start_date,
+               category=category_instance,
                End_date=End_date,
                status=status
 
@@ -458,6 +526,7 @@ def project_create(request):
                            "description":description,
                            "priority":priority,
                            "start_date":start_date,
+                           "category":category_name,
                            "End_date":End_date,
                             "status":status },status=200)
      except project.DoesNotExist:
@@ -478,6 +547,7 @@ def project_details(request):
                "priority":pro.priority,
                "start_date":pro.start_date,
                "End_date":pro.End_date,
+               "category":pro.category.name if pro.category else None,
                "status":pro.status,
                "create_at":pro.create_at
                
@@ -692,7 +762,7 @@ def create_teamleader_assignment(request):
 @api_view(['GET'])
 def get_teamleader_assignments(request):
     assignments = TeamLeaderAssignment.objects.all()
-    if not assignments.exists():
+    if not assignments:
         return Response({"msg": "No team leader assignments found"}, status=404)
 
     data = []
@@ -758,9 +828,30 @@ def delete_TeamLeaderAssignment(request,id):
           return Response({"msg":"members not found"},status=404)
      
 
+@api_view(['POST'])
+def create_Team(request):
+     project=request.data.get("project")
+     name=request.data.get("name")
+     description=request.data.get("description")
+     start_date=request.data.get("start_date")
+     description=request.data.get("end_date")
+     description=request.data.get("assigned_to")
 
+     if not name or not description :
+          return Response({"msg":"please fill the all requied fields"},status=404)
+     
+     
 
-          
+     Category_create = Category.objects.create(
+          name = name,
+          description= description
+     )
+  
+     return Response({"msg":"Category create sucessfully",
+                      "name":name,
+                      "description":description
+                      },status=200)
+
 
 
      

@@ -2,12 +2,21 @@ from django.db import models
 
 # Create your models here.
 
+class Category(models.Model):
+    name =models.CharField(max_length=100,null=True,blank=True)
+    description = models.TextField(max_length=100,null=True,blank=True)
 
+    def __str__(self):
+        return self.name
+    
+
+    
 class user(models.Model):
     profile_image = models.ImageField(upload_to="profile_image/",null=True,blank=True)
     username= models.CharField(max_length=100,null=True,blank=True)
     email = models.EmailField(max_length=100,null=True,blank =True)
     Phone_number = models.CharField(max_length=10,null=True,blank=True)
+    Categorys =models.ForeignKey(Category,on_delete=models.CASCADE,null=True,blank=True)
     role = models.CharField(max_length=100,null=True,blank=True)
     password = models.CharField(max_length=100,null=True,blank=True)
     role_type =models.CharField(max_length=100,default="employee")
@@ -22,6 +31,7 @@ class Manager(models.Model):
     username = models.CharField(max_length=100,null=True,blank=True)
     email = models.EmailField(max_length=100,null=True,blank=True)
     Phone_number = models.CharField(max_length=100,null=True,blank=True)
+    Category=models.ForeignKey(Category,on_delete=models.CASCADE,null=True,blank=True)
     password =models.CharField(max_length=100,null=True,blank=True)
     role_type =models.CharField(max_length=100,null=True,blank=True,default="Manager")
     created_at =models.DateTimeField(auto_now_add=True)
@@ -60,6 +70,7 @@ class project(models.Model):
     priority =models.CharField(max_length=100,null=True,blank=True,default="small")
     start_date =models.DateField(null=True,blank=True)
     End_date =models.DateField(null=True,blank=True)
+    category =models.ForeignKey(Category,on_delete=models.CASCADE,null=True,blank=True)
     status =models.CharField(max_length=50,null=True,blank=True,default="To do")
     create_at =models.DateTimeField(auto_now=True)
 
@@ -91,4 +102,13 @@ class TeamLeaderAssignment(models.Model):
         return f"{self.assigned_by.username} → {self.assigned_to.username} ({'Self' if self.is_self_assigned else 'Delegated'})"
     
 
+
+class Task(models.Model):
+    project = models.ForeignKey(project,on_delete=models.CASCADE,null=True,blank=True)
+    name =models.CharField(max_length=100,null=True,blank=True)
+    description = models.TextField(null=True,blank=True)
+    start_date =models.DateField(null=True,blank=True)
+    end_date =models.DateField(null=True,blank=True)
+    assigned_to = models.ForeignKey(user,on_delete=models.CASCADE,null=True,blank=True)
+    assigned_at =models.DateTimeField(auto_now_add=True)
 

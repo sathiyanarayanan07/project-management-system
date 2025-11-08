@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import user,Manager,TeamLeader,Admin,Team,Phase,project,TeamLeaderAssignment
+from .models import user,Manager,TeamLeader,Admin,Team,Phase,project,TeamLeaderAssignment,Category,Task
 
 class userSerializer(serializers.ModelSerializer):
     class Meta:
@@ -49,4 +49,14 @@ class PhaseSerializer(serializers.ModelSerializer):
 class teamleader_to_membersSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamLeaderAssignment
+        fields ="__all__"
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields ="__all__"
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
         fields ="__all__"
