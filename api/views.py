@@ -44,7 +44,7 @@ def Category_delete(request,name):
 @api_view(['GET'])
 def user_list(request):
      users=user.objects.all()
-     serializer = userSerializer(user,many=True)
+     serializer = userSerializer(users,many=True)
      return Response(serializer.data)
 
 
@@ -204,7 +204,7 @@ def register_user(request):
 def user_details(request):
     users = user.objects.all()
 
-    if not users:
+    if not users.exists():
         return Response({"msg": "No users found"}, status=404)
 
     data = []
