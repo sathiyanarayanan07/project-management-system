@@ -52,7 +52,11 @@ urlpatterns = [
     path("delete_TeamLeaderAssignment/<int:id>/",views.delete_TeamLeaderAssignment,name="delete_members_assignment"),
 
 
-    path("create_task",views.create_task,name="create_task")
+    path("create_task/",views.create_task,name="create_task"),
+    path("Task_details/",views.Task_details,name="Task_details"),
+    path('update_task/<int:task_id>/', views.update_task,name="update_task"),
+    path('delete_task/<int:task_id>/', views.delete_task,name="delete_task"),
+
     
 
 ]

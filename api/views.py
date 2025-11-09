@@ -204,7 +204,7 @@ def register_user(request):
 def user_details(request):
     users = user.objects.all()
 
-    if not users.exists():
+    if not users:
         return Response({"msg": "No users found"}, status=404)
 
     data = []
@@ -266,7 +266,7 @@ def user_delete(request,email):
 def manager_details(request):
     users = Manager.objects.all()
 
-    if not Manager.exists():
+    if not Manager:
         return Response({"msg": "No users found"}, status=404)
 
     data = []
@@ -864,3 +864,66 @@ def create_task(request):
         "msg": "Task created successfully",
         "task_id": task.id
     }, status=201)
+
+
+
+@api_view(['GET'])
+def Task_details(request):
+    Tasks = Task.objects.all()
+
+    if not Tasks:
+        return Response({"msg": "No Tasks found"}, status=404)
+
+    data = []
+    for T in Tasks:
+        data.append({
+            "project": T.project.name,
+            "name": T.name,
+            "description":T.description,
+            "start_date":T.start_date,
+            "end_date":T.end_date,
+            "assigned_to":T.assigned_to.username
+        })
+
+    return Response(data, status=200)
+
+
+@api_view(['PUT'])
+def update_task(request, task_id):
+    try:
+        task = Task.objects.get(id=task_id)
+    except Task.DoesNotExist:
+        return Response({"msg": "Task not found"}, status=404)
+    project_name=request.data.get("project")
+    
+    project_instance = project.objects.filter(name=project_name).first()
+    if not project_instance:
+        return Response({"msg": "Project not found"}, status=404)
+    task.project = project_instance
+    
+    task.name = request.data.get("name", task.name)
+    task.description = request.data.get("description", task.description)
+    task.start_date = request.data.get("start_date", task.start_date)
+    task.end_date = request.data.get("end_date", task.end_date)
+
+    assigned_to_username = request.data.get("assigned_to")
+    if assigned_to_username:
+        try:
+            assigned_to_instance = user.objects.get(username=assigned_to_username)
+            task.assigned_to = assigned_to_instance
+        except user.DoesNotExist:
+            return Response({"msg": "Assigned user not found"}, status=404)
+
+    task.save()
+    return Response({"msg": "Task updated successfully"}, status=200)
+
+
+@api_view(['DELETE'])
+def delete_task(request, task_id):
+    try:
+        task = Task.objects.get(id=task_id)
+    except Task.DoesNotExist:
+        return Response({"msg": "Task not found"}, status=404)
+
+    task.delete()
+    return Response({"msg": "Task deleted successfully"}, status=200)
