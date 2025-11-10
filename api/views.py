@@ -66,7 +66,7 @@ def Manager_list(request):
 @api_view(['GET'])
 def TeamLeader_list(request):
      users=TeamLeader.objects.all()
-     serializer = TeamLeaderSerializer(TeamLeader,many=True)
+     serializer = TeamLeaderSerializer(users,many=True)
      return Response(serializer.data)
 
 
