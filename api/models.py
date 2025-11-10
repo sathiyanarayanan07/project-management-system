@@ -76,7 +76,7 @@ class Phase(models.Model):
 
 class Category(models.Model):
     name =models.CharField(max_length=100,null=True,blank=True)
-    phase =models.ForeignKey(Phase,on_delete=models.CASCADE,null=True,blank=True)
+    phase =models.CharField(max_length=100,null=True,blank=True)
     description = models.TextField(max_length=100,null=True,blank=True)
 
     def __str__(self):

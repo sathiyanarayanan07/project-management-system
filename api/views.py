@@ -18,20 +18,15 @@ def Category_list(request):
 def category_create(request):
      data=request.data
      name=request.data.get("name")
-     phase_id =request.data.get("phase")
+     phase =request.data.get("phase")
      description = data.get("description")
-
-     try:
-          phase_instance =Phase.objects.get(id=phase_id)
-     except Phase.DoesNotExist:
-          return Response({"msg":"phase is not found"},status=404)    
 
      if not name or not description:
           return Response({"msg":"please fill all required fields"},status=400)
 
      create_category=Category.objects.create(
           name=name,
-          phase= phase_instance,
+          phase= phase,
           description=description
      )
      return Response({"msg":"create category successfully"},status=200)
@@ -98,8 +93,7 @@ def Single_login(request):
     login_user = user.objects.get(email=email, password=password)
     return Response({
             "msg": "login Successfully",
-            "email": login_user.email,
-            "role_type": login_user.role_type
+            "email": login_user.email
         }, status=200)
 
    
