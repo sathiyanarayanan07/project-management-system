@@ -14,19 +14,40 @@ def Category_list(request):
      serializer = CategorySerializer(users,many=True)
      return Response(serializer.data)
 
+@api_view(['GET'])
+def get_category(request):
+     users=Category.objects.all()
+
+     get=[]
+     for c in users:
+         phase_list = c.phase.split(",") if c.phase else []
+
+         get.append({
+             "name":c.name,
+             "phase":phase_list,
+             "description":c.description
+         })
+     return Response(get,status=200)
+
+
+
+
 @api_view(['POST'])
 def category_create(request):
      data=request.data
      name=request.data.get("name")
-     phase =request.data.get("phase")
+     phase_list =request.data.get("phase")
      description = data.get("description")
 
-     if not name or not description:
-          return Response({"msg":"please fill all required fields"},status=400)
+     if not isinstance(phase_list,list):
+         return Response({"msg":"phase must be a list"},status=400)
+     
+     phase_string =",".join(phase_list)
+     
 
      create_category=Category.objects.create(
           name=name,
-          phase= phase,
+          phase= phase_string,
           description=description
      )
      return Response({"msg":"create category successfully"},status=200)

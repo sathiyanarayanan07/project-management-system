@@ -8,6 +8,7 @@ urlpatterns = [
      path("Admin_list/",views.Admin_list,name="Admin_list"),
      path("Category_list/",views.Category_list,name="Category_list"),
      path("category_create/",views.category_create,name="category_create"),
+     path("get_category/",views.get_category,name="get_category"),
      path("Category_delete/<str:name>/",views.Category_delete,name="Category_delete"),
     #login#
     path("single_login/",views.Single_login,name="single_login"),

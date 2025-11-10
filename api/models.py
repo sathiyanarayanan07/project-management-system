@@ -3,6 +3,14 @@ from django.db import models
 # Create your models here.
 
     
+class Category(models.Model):
+    name =models.CharField(max_length=100,null=True,blank=True)
+    phase =models.CharField(max_length=100,null=True,blank=True)
+    description = models.TextField(max_length=100,null=True,blank=True)
+
+    def __str__(self):
+        return self.name
+
 
     
 class user(models.Model):
@@ -54,7 +62,7 @@ class project(models.Model):
     priority =models.CharField(max_length=100,null=True,blank=True,default="small")
     start_date =models.DateField(null=True,blank=True)
     End_date =models.DateField(null=True,blank=True)
-    category =models.ForeignKey('Category',on_delete=models.CASCADE,null=True,blank=True)
+    category =models.ForeignKey(Category,on_delete=models.CASCADE,null=True,blank=True)
     status =models.CharField(max_length=50,null=True,blank=True,default="To do")
     create_at =models.DateTimeField(auto_now=True)
 
@@ -73,14 +81,6 @@ class Phase(models.Model):
     def __str__(self):
         return f"{self.role} -{self.project}--{self.id}"
     
-
-class Category(models.Model):
-    name =models.CharField(max_length=100,null=True,blank=True)
-    phase =models.CharField(max_length=100,null=True,blank=True)
-    description = models.TextField(max_length=100,null=True,blank=True)
-
-    def __str__(self):
-        return self.name
 
 
 
