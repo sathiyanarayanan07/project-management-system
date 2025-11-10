@@ -17,17 +17,12 @@ urlpatterns = [
     path("user_details/",views.user_details,name="user_details"),
     path("user_update/<str:email>/",views.user_update,name="user_update"),
     path("user_delete/<str:email>/",views.user_delete,name="user_delete"),
-    #adminlogin
-    path("admin_login/",views.admin_login,name="admin_login"),
+
     #manager
     path("manager_details/",views.manager_details,name="manager_details"),
     path("manager_update/<str:email>",views.manager_update,name="manager_update"),
     path("Manager_delete/<str:email>/",views.Manager_delete,name="Manager_delete"),
-    #teamleader
-    path("TeamLeader_delete/<str:email>/",views.TeamLeader_delete,name="TeamLeader_delete"),
-    path("TeamLeader_update/<str:email>",views.TeamLeader_update,name="TeamLeader_update"),
-    path("TeamLeader_details/",views.TeamLeader_details,name="TeamLeader_details"),
-
+  
 
     #team
     path("create_Team/",views.create_Team,name="create_Team"),

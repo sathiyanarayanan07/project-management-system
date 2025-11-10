@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task,subTask
-from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer,subTaskSerializer
+from .models import user,Manager,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task,subTask
+from .serializers import userSerializer,ManagerSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer,subTaskSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 import uuid
@@ -18,13 +18,20 @@ def Category_list(request):
 def category_create(request):
      data=request.data
      name=request.data.get("name")
+     phase_id =request.data.get("phase")
      description = data.get("description")
+
+     try:
+          phase_instance =Phase.objects.get(id=phase_id)
+     except Phase.DoesNotExist:
+          return Response({"msg":"phase is not found"},status=404)    
 
      if not name or not description:
           return Response({"msg":"please fill all required fields"},status=400)
 
      create_category=Category.objects.create(
           name=name,
+          phase= phase_instance,
           description=description
      )
      return Response({"msg":"create category successfully"},status=200)
@@ -73,7 +80,7 @@ def TeamLeader_list(request):
 @api_view(['GET'])
 def Admin_list(request):
      users=Admin.objects.all()
-     serializer = AdminSerializer(Admin,many=True)
+     serializer = AdminSerializer(users,many=True)
      return Response(serializer.data)
 
 
@@ -83,30 +90,19 @@ def Admin_list(request):
 def Single_login(request):
     email = request.data.get("email")
     password = request.data.get("password")
-    role_type = request.data.get("role_type")
 
-    if not email or not password or not role_type:
+    if not email or not password:
         return Response({"msg": "invalid credentials"}, status=400)
 
-    try:
-        if role_type == "employee":
-            login_user = user.objects.get(email=email, password=password, role_type=role_type)
-        elif role_type == "TeamLeader":
-            login_user = TeamLeader.objects.get(email=email, password=password, role_type=role_type)
-        else:
-            return Response({"msg": "invalid data"}, status=400)
-
-     
-        return Response({
+    
+    login_user = user.objects.get(email=email, password=password)
+    return Response({
             "msg": "login Successfully",
             "email": login_user.email,
             "role_type": login_user.role_type
         }, status=200)
 
-    except ObjectDoesNotExist:
-        return Response({"msg": "Invalid email or password"}, status=401)
-    
-
+   
 
 
 @api_view(['POST'])
@@ -170,15 +166,6 @@ def register_user(request):
                  role_type=role_type
                  
             )
-        elif role_type == "TeamLeader":
-             create_TeamLeader =TeamLeader.objects.create(
-                  username=username,
-                  email=email,
-                  Phone_number=Phone_number,
-                  role=role,
-                  password=password,
-                  role_type=role_type
-             )
         else:
             return Response({"msg":"invaild data"},status=400)
         token =str(uuid.uuid4())
@@ -319,82 +306,9 @@ def Manager_delete(request,email):
      user_delete.delete()
      return Response({"msg":f"user {email} delete sucessfully"})
 
-@api_view(['GET'])
-def TeamLeader_details(request):
-    users = TeamLeader.objects.all()
-
-    if not TeamLeader:
-        return Response({"msg": "No users found"}, status=404)
-
-    data = []
-    for u in users:
-        data.append({
-            "username": u.username,
-            "email": u.email,
-            "password":u.password,
-            "created_at":u.created_at
-        })
-
-    return Response(data, status=200)
 
 
-@api_view(['PUT'])
-def TeamLeader_update(request,email):
-        try:
-             user_instance = TeamLeader.objects.get(email=email)
-        except TeamLeader.DoesNotExist:
-             return Response({"msg":"user not found"},status=404)
 
-        profile_image =request.FILES.get("profile_image")
-        username= request.data.get("username")
-        email= request.data.get("email")
-        Phone_number = request.data.get("Phone_number")
-        password = request.data.get("password")
-        role_type = request.data.get("role_type")
-        if profile_image:
-              user_instance.profile_image = profile_image
-        if username:
-              user_instance.username= username
-        if email:
-          user_instance.email = email
-        if Phone_number:
-            user_instance.Phone_number = Phone_number
-        if password:
-             user_instance.password = password
-        if role_type:
-             user_instance.role_type = role_type
-        user_instance.save()
-        serializer = TeamLeaderSerializer(user_instance)
-        return Response(serializer.data, status=200)
-
-@api_view(['DELETE'])
-def TeamLeader_delete(request,email):
-     user_delete = TeamLeader.objects.filter(email=email)
-     if not user_delete:
-          return Response({"msg":f"user {email}not found "},status=404)
-     
-     user_delete.delete()
-     return Response({"msg":f"user {email} delete sucessfully"},status=200)
-
-##admin login ##
-@api_view(['POST'])
-def admin_login(request):
-     admin_name = request.data.get("admin_name")
-     password= request.data.get("password")
-
-     if not Admin or not password:
-          return Response({"msg":"admin user not found"},status=404)
-     
-     admin_log = Admin.objects.get(
-          admin_name=admin_name,
-          password=password
-
-   
-     )
-     return Response({"msg":"admin login sucessfully",
-                      "admin_user":admin_name,
-                      "password":password},status=200)
-        
 
 ##Team_create#
 @api_view(['POST'])
@@ -615,7 +529,7 @@ def project_delete(request,name):
 def create_phases(request):
      project_name =request.data.get("project")
      role= request.data.get("role")
-     team_leader_id =request.data.get("team_leader")
+     team_leader_username =request.data.get("team_leader")
      status = request.data.get("status")
      start_date = request.data.get("start_date")
      end_date = request.data.get("end_date")
@@ -623,29 +537,16 @@ def create_phases(request):
      project_instance = project.objects.get(name=project_name)
      if not project_instance:
           return Response({"msg":"project not found"},status=404)
-     TL_instance =user.objects.get(id=team_leader_id)
-     if not TL_instance:
-          return Response({"msg":"user not found"},status=404)
-  
      
-     if TL_instance.role_type!="TeamLeader":
-          TL_instance.role_type = "TeamLeader"
-          TL_instance.save()
+     
+     user_instance = user.objects.get(username=team_leader_username)
+     if not user_instance:
+          return Response({"msg":"project not found"},status=404)
 
-     if not TeamLeader.objects.filter(email=TL_instance.email).exists():
-            TeamLeader.objects.create(
-                profile_image=TL_instance.profile_image,
-                username=TL_instance.username,
-                email=TL_instance.email,
-                Phone_number=TL_instance.Phone_number,
-                password=TL_instance.password,
-                role_type="TeamLeader"
-            )
-     
      create_phases= Phase.objects.create(
         project=project_instance,
         role=role,
-        team_leader=TL_instance,
+        team_leader=user_instance,
         status=status,
         start_date= start_date,
         end_date=end_date
@@ -749,8 +650,8 @@ def create_teamleader_assignment(request):
         return Response({"msg": "Project not found"}, status=404)
 
     try:
-        assigned_by_instance = TeamLeader.objects.get(username=assigned_by_username)
-    except TeamLeader.DoesNotExist:
+        assigned_by_instance = user.objects.get(username=assigned_by_username)
+    except user.DoesNotExist:
         return Response({"msg": "Assigned_by user not found"}, status=404)
 
     try:
@@ -811,9 +712,9 @@ def update_teamleader_assignment(request, id):
 
     if assigned_by_username:
         try:
-            assigned_by_instance = TeamLeader.objects.get(username=assigned_by_username)
+            assigned_by_instance = user.objects.get(username=assigned_by_username)
             assignment.assigned_by = assigned_by_instance
-        except TeamLeader.DoesNotExist:
+        except user.DoesNotExist:
             return Response({"msg": "Assigned_by user not found"}, status=404)
 
     if assigned_to_username:

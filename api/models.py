@@ -2,12 +2,6 @@ from django.db import models
 
 # Create your models here.
 
-class Category(models.Model):
-    name =models.CharField(max_length=100,null=True,blank=True)
-    description = models.TextField(max_length=100,null=True,blank=True)
-
-    def __str__(self):
-        return self.name
     
 
     
@@ -34,16 +28,8 @@ class Manager(models.Model):
     role_type =models.CharField(max_length=100,null=True,blank=True,default="Manager")
     created_at =models.DateTimeField(auto_now_add=True)
 
-class TeamLeader(models.Model):
-    profile_image =models.ImageField(upload_to="profile_image/",null=True,blank=True)
-    username = models.CharField(max_length=100,null=True,blank=True)
-    email = models.EmailField(max_length=100,null=True,blank=True)
-    Phone_number = models.CharField(max_length=100,null=True,blank=True)
-    role = models.CharField(max_length=100,null=True,blank=True)
-    password =models.CharField(max_length=100,null=True,blank=True)
-    role_type =models.CharField(max_length=100,null=True,blank=True,default="TeamLeader")
-    created_at =models.DateTimeField(auto_now_add=True)
-
+    def __str__(self):
+        return self.name
 class Admin(models.Model):
     admin_name = models.CharField(max_length=100,null=True,blank=True)
     email = models.EmailField(max_length=100,null=True,blank=True)
@@ -68,7 +54,7 @@ class project(models.Model):
     priority =models.CharField(max_length=100,null=True,blank=True,default="small")
     start_date =models.DateField(null=True,blank=True)
     End_date =models.DateField(null=True,blank=True)
-    category =models.ForeignKey(Category,on_delete=models.CASCADE,null=True,blank=True)
+    category =models.ForeignKey('Category',on_delete=models.CASCADE,null=True,blank=True)
     status =models.CharField(max_length=50,null=True,blank=True,default="To do")
     create_at =models.DateTimeField(auto_now=True)
 
@@ -86,12 +72,21 @@ class Phase(models.Model):
 
     def __str__(self):
         return f"{self.role} -{self.project}--{self.id}"
+    
+
+class Category(models.Model):
+    name =models.CharField(max_length=100,null=True,blank=True)
+    phase =models.ForeignKey(Phase,on_delete=models.CASCADE,null=True,blank=True)
+    description = models.TextField(max_length=100,null=True,blank=True)
+
+    def __str__(self):
+        return self.name
 
 
 
 class TeamLeaderAssignment(models.Model):
     project = models.ForeignKey(project, on_delete=models.CASCADE, related_name='leader_assignments')
-    assigned_by = models.ForeignKey(TeamLeader, on_delete=models.CASCADE, related_name='assigned_leaders')
+    assigned_by = models.ForeignKey(user, on_delete=models.CASCADE, related_name='assigned_leaders')
     assigned_to = models.ForeignKey(user, on_delete=models.CASCADE, related_name='received_assignments')
     assigned_at = models.DateTimeField(auto_now_add=True)
     is_self_assigned = models.BooleanField(default=False)
