@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task
-from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer
+from .models import user,Manager,TeamLeader,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task,subTask
+from .serializers import userSerializer,ManagerSerializer,TeamLeaderSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer,subTaskSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 import uuid
@@ -554,35 +554,47 @@ def project_details(request):
           })
      return Response(proj_list,status=200)
 
-
 @api_view(['PUT'])
-def project_update(request,name):
-      try:
-             project_instance = project.objects.get(name=name)
-      except project.DoesNotExist:
-             return Response({"msg":"project instance not found"},status=404)
-      
-      name =request.data.get("name")
-      description= request.data.get("description")
-      priority= request.data.get("priority")
-      start_date = request.data.get("start_date")
-      End_date =request.data.get("End_date")
-      status = request.data.get("status")
-      if name:
-           project_instance.name = name
-      if description:
-              project_instance.description= description
-      if priority:
-          project_instance.priority = priority
-      if start_date:
-            project_instance.start_date = start_date
-      if End_date:
-             project_instance.End_date =End_date
-      if status:
-             project_instance.status = status
-             project_instance.save()
-             serializer = userSerializer(project_instance)
-             return Response(serializer.data, status=200)
+def project_update(request, name):
+    try:
+        project_instance = project.objects.get(name=name)
+    except project.DoesNotExist:
+        return Response({"msg": "project instance not found"}, status=404)
+
+
+    category_name = request.data.get("category")
+    new_name = request.data.get("name")
+    description = request.data.get("description")
+    priority = request.data.get("priority")
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("End_date")
+    status = request.data.get("status")
+
+
+    if category_name:
+        try:
+            category_instance = Category.objects.get(name=category_name)
+            project_instance.category = category_instance
+        except Category.DoesNotExist:
+            return Response({"msg": "category not found"}, status=404)
+
+
+    if new_name:
+        project_instance.name = new_name
+    if description:
+        project_instance.description = description
+    if priority:
+        project_instance.priority = priority
+    if start_date:
+        project_instance.start_date = start_date
+    if end_date:
+        project_instance.End_date = end_date
+    if status:
+        project_instance.status = status
+
+    project_instance.save()
+    serializer = projectSerializer(project_instance)
+    return Response(serializer.data, status=200)
 
 
 
@@ -722,7 +734,7 @@ def Phase_delete(request,role):
           return Response({"msg":f"user {role}not found "},status=404)
      
      Phase_delete.delete()
-     return Response({"msg":f"user {role} delete sucessfully"})
+     return Response({"msg":f"user {role} delete sucessfully"},status=200)
 
 @api_view(['POST'])
 def create_teamleader_assignment(request):
@@ -927,3 +939,128 @@ def delete_task(request, task_id):
 
     task.delete()
     return Response({"msg": "Task deleted successfully"}, status=200)
+
+#subTask#
+@api_view(['POST'])
+def subtask_create(request):
+     task_name =request.data.get("tasks")
+     name = request.data.get("name")
+     description =request.data.get("description")
+     start_date = request.data.get("start_date")
+     end_date =request.data.get("end_date")
+     assigned_to_username =request.data.get("assigned_to")
+
+     try:
+          task_instance =Task.objects.get(name=task_name)
+     except Task.DoesNotExist:
+          return Response({"msg":"task not found"},status=404)
+     try:
+          user_instance =user.objects.get(username=assigned_to_username)
+     except user.DoesNotExist:
+          return Response({"msg":"user no found"},status=404)
+
+     create_subtask =subTask.objects.create(
+          tasks=task_instance,
+          name=name,
+          description=description,
+          start_date=start_date,
+          end_date=end_date,
+          assigned_to =user_instance
+
+     )   
+     create_subtask.save()
+
+     return Response({"msg":"subtask create successfully",
+                      "tasks":task_name,
+                      "name":name,
+                      "description":description,
+                      "start_date":start_date,
+                      "end_date":end_date,
+                      "assigned_to":assigned_to_username},status=200)
+
+
+@api_view(['GET'])
+def details_subtask(request):
+     subtask_details =subTask.objects.all()
+     if not subtask_details:
+          return Response({"msg":"subtask not found"},status=404)
+     
+     get=[]
+     for s in subtask_details:
+          get.append({
+               "tasks":s.tasks.name,
+               "name":s.name,
+               "description":s.description,
+               "start_date":s.start_date,
+               "end_date":s.end_date,
+               "progress":s.progress,
+               "assigned_to":s.assigned_to.username
+               
+          })
+          return Response(get,status=200)
+     
+@api_view(['PUT'])
+def update_subtask(request,name):
+     try:
+          subtask_instance =subTask.objects.get(name=name)
+     except subTask.DoesNotExist:
+          return Response({"msg":"subtask not found"},status=404)
+
+     
+     task_name = request.data.get("tasks")
+     name = request.data.get("name")
+     description=request.data.get("description")
+     start_date=request.data.get("start_date")
+     end_date= request.data.get("end_date")
+     progress=request.data.get("progress")
+     assigned_to_name=request.data.get("assigned_to")
+
+     if task_name:
+           try:
+                task = Task.objects.get(name=task_name)
+                subtask_instance.tasks =task
+           except Task.DoesNotExist:
+                return Response({"msg": "Task not found"}, status=404)
+           
+
+     if name:
+          subtask_instance.name =name
+     if description:
+          subtask_instance.description=description
+     if start_date:
+          subtask_instance.start_date=start_date
+     if end_date:
+          subtask_instance.end_date =end_date
+     if progress:
+          subtask_instance.progress =progress
+     if assigned_to_name:
+          try:
+               assigned_user =user.objects.get(username=assigned_to_name)
+               subtask_instance.assigned_to =assigned_user
+          except user.DoesNotExist:
+               return Response({"msg":"user not found"},status=404)
+          
+     subtask_instance.save()
+     serializer =subTaskSerializer(subtask_instance)
+     return Response(serializer.data,status=200)
+
+
+@api_view(['DELETE'])
+def subtask_delete(request,name):
+     subtask_delete = subTask.objects.filter(name=name)
+     if not subtask_delete:
+          return Response({"msg":f"user {name}not found "},status=404)
+     
+     subtask_delete.delete()
+     return Response({"msg":f"user {name} delete sucessfully"})
+          
+
+          
+
+
+
+
+
+
+     
+
