@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,Manager,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task,subTask
-from .serializers import userSerializer,ManagerSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer,subTaskSerializer
+from .models import user,Manager,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task,subTask,phase_template
+from .serializers import userSerializer,ManagerSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer,subTaskSerializer,phase_templatesSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 import uuid
@@ -15,46 +15,10 @@ def Category_list(request):
      return Response(serializer.data)
 
 @api_view(['GET'])
-def get_category(request):
-     users=Category.objects.all()
-
-     get=[]
-     for c in users:
-         phase_list = c.phase.split(",") if c.phase else []
-
-         get.append({
-             "name":c.name,
-             "phase":phase_list,
-             "description":c.description
-         })
-     return Response(get,status=200)
-
-
-
-
-@api_view(['POST'])
-def category_create(request):
-     data=request.data
-     name=request.data.get("name")
-     description = data.get("description")
-
-     create_category=Category.objects.create(
-          name=name,
-          description=description
-     )
-     return Response({"msg":"create category successfully"},status=200)
-
-@api_view(['DELETE'])
-def Category_delete(request,name):
-     Category_delete = Category.objects.filter(name=name)
-     if not user_delete:
-          return Response({"msg":f"category {name}not found "},status=404)
-     
-     Category_delete.delete()
-     return Response({"msg":f"category {name} delete sucessfully"},status=200)
-
-
-
+def phase_template_list(request):
+    user =phase_template.objects.all()
+    serializer =phase_templatesSerializer(user,many=True)
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def user_list(request):
@@ -529,8 +493,6 @@ def project_delete(request,name):
      return Response({"msg":f"user {name} delete sucessfully"},status=200)
 
 
-
-
 #project_phases#
 @api_view(['POST'])
 def create_phases(request):
@@ -563,7 +525,6 @@ def create_phases(request):
 
 
 
-
 @api_view(['GET'])
 def get_phases_details(request):
      phase_obj =Phase.objects.all()
@@ -582,8 +543,6 @@ def get_phases_details(request):
                "progress":phas.progress,
                "start_date":phas.start_date,
                "end_date":phas.end_date
-
-
 
           })
      return Response(phase_list,status=200)
@@ -677,8 +636,6 @@ def create_teamleader_assignment(request):
     serializer = teamleader_to_membersSerializer(assignment)
     return Response(serializer.data, status=201)
 
-          
-
 @api_view(['GET'])
 def get_teamleader_assignments(request):
     assignments = TeamLeaderAssignment.objects.all()
@@ -696,7 +653,6 @@ def get_teamleader_assignments(request):
         })
 
     return Response(data, status=200)
-
 
 @api_view(['PUT'])
 def update_teamleader_assignment(request, id):
@@ -748,7 +704,6 @@ def delete_TeamLeaderAssignment(request,id):
           return Response({"msg":"members not found"},status=404)
      
 
-
 @api_view(['POST'])
 def create_task(request):
     project_id = request.data.get("project")
@@ -785,8 +740,6 @@ def create_task(request):
         "task_id": task.id
     }, status=201)
 
-
-
 @api_view(['GET'])
 def Task_details(request):
     Tasks = Task.objects.all()
@@ -806,7 +759,6 @@ def Task_details(request):
         })
 
     return Response(data, status=200)
-
 
 @api_view(['PUT'])
 def update_task(request, task_id):
@@ -847,6 +799,7 @@ def delete_task(request, task_id):
 
     task.delete()
     return Response({"msg": "Task deleted successfully"}, status=200)
+
 
 #subTask#
 @api_view(['POST'])
@@ -961,9 +914,72 @@ def subtask_delete(request,name):
      
      subtask_delete.delete()
      return Response({"msg":f"user {name} delete sucessfully"})
-          
 
-          
+
+
+@api_view(['POST'])
+def category_create(request):
+     data=request.data
+     name=request.data.get("name")
+     description = data.get("description")
+
+     create_category=Category.objects.create(
+          name=name,
+          description=description
+     )
+     return Response({"msg":"create category successfully"},status=200)      
+
+    
+@api_view(['GET'])
+def get_category(request):
+     users=Category.objects.all()
+
+     get=[]
+     for c in users:
+         phase_list = c.phase.split(",") if c.phase else []
+
+         get.append({
+             "name":c.name,
+             "phase":phase_list,
+             "description":c.description
+         })
+     return Response(get,status=200)
+
+
+@api_view(['DELETE'])
+def Category_delete(request,name):
+     Category_delete = Category.objects.filter(name=name)
+     if not user_delete:
+          return Response({"msg":f"category {name}not found "},status=404)
+     
+     Category_delete.delete()
+     return Response({"msg":f"category {name} delete sucessfully"},status=200)
+
+
+
+#phase_templte
+@api_view(['POST'])
+def create_phase_template(request):
+    Category_name =request.data.get("category")
+    name = request.data.get("name")
+    description =request.data.get("description")
+
+    try:
+        category_instance =Category.objects.get(name=Category_name)
+    except Category.DoesNotExist:
+        return Response({"msg":"category not found"},status=404)
+    
+    create_phase =phase_template.objects.create(
+        Category_name=category_instance,
+        name=name,
+        description=description
+
+    )
+    return Response({"msg":"phase template create successfuly",
+                     "Category_name":Category_name,
+                     "name":name,
+                     "description":description},status=200)
+      
 
 
 

@@ -7,9 +7,13 @@ urlpatterns = [
      path("TeamLeader_list/",views.TeamLeader_list,name="TeamLeader_list"),
      path("Admin_list/",views.Admin_list,name="Admin_list"),
      path("Category_list/",views.Category_list,name="Category_list"),
+     #category
      path("category_create/",views.category_create,name="category_create"),
      path("get_category/",views.get_category,name="get_category"),
      path("Category_delete/<str:name>/",views.Category_delete,name="Category_delete"),
+     #phase_template
+     path("create_phase_template/",views.create_phase_template,name="create_phase_template"),
+     path("phase_template_list/",views.phase_template_list,name="phase_template_list"),
     #login#
     path("single_login/",views.Single_login,name="single_login"),
     path("am_login/",views.AM_login,name="admin_manager_login"),
