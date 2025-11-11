@@ -36,18 +36,10 @@ def get_category(request):
 def category_create(request):
      data=request.data
      name=request.data.get("name")
-     phase_list =request.data.get("phase")
      description = data.get("description")
-
-     if not isinstance(phase_list,list):
-         return Response({"msg":"phase must be a list"},status=400)
-     
-     phase_string =",".join(phase_list)
-     
 
      create_category=Category.objects.create(
           name=name,
-          phase= phase_string,
           description=description
      )
      return Response({"msg":"create category successfully"},status=200)
