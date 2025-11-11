@@ -44,11 +44,15 @@ class Manager(models.Model):
 
     def __str__(self):
         return self.name
+    
 class Admin(models.Model):
     admin_name = models.CharField(max_length=100,null=True,blank=True)
     email = models.EmailField(max_length=100,null=True,blank=True)
     role_type = models.CharField(max_length=100,null=True,blank=True,default="Admin")
     password = models.CharField(max_length=100,null=True,blank=True)
+
+    def __str__(self):
+        return self. admin_name
 
     
 class Team(models.Model):
@@ -56,7 +60,6 @@ class Team(models.Model):
     description =models.TextField(max_length=100,null=True,blank=True)
     members= models.ManyToManyField(user,blank=True)
   
-
 
     def __str__(self):
         return f"{self.name}--{self.description}"
@@ -69,6 +72,7 @@ class project(models.Model):
     start_date =models.DateField(null=True,blank=True)
     End_date =models.DateField(null=True,blank=True)
     category =models.ForeignKey(Category,on_delete=models.CASCADE,null=True,blank=True)
+    assigned_to = models.ForeignKey(user,on_delete=models.CASCADE,null=True,blank=True)
     status =models.CharField(max_length=50,null=True,blank=True,default="To do")
     create_at =models.DateTimeField(auto_now=True)
 
@@ -76,8 +80,8 @@ class project(models.Model):
         return self.name
     
 class Phase(models.Model):
-    role= models.CharField(max_length=50,null=True,blank=True,default="Design")
-    project = models.ForeignKey(project, on_delete=models.CASCADE, related_name='phases')
+    phases= models.ForeignKey(phase_template,on_delete=models.CASCADE,null=True,blank=True)
+    project = models.ForeignKey(project, on_delete=models.CASCADE,null=True,blank=True)
     team_leader = models.ForeignKey(user, on_delete=models.CASCADE, null=True, blank=True)
     status = models.CharField(max_length=50, default="Pending")
     progress = models.IntegerField(null=True,blank=True)
@@ -85,7 +89,7 @@ class Phase(models.Model):
     end_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.role} -{self.project}--{self.id}"
+        return f"{self.phases} -{self.project}"
     
 
 

@@ -383,12 +383,17 @@ def project_create(request):
           start_date=data.get("start_date")
           End_date =data.get("End_date")
           category_name=data.get("category")
+          assigned_to_name=data.get("assigned_to")
           status=data.get("status")
 
           try:
                category_instance =Category.objects.get(name=category_name)
           except Category.DoesNotExist:
                return Response({"msg":"category not found"},status=404)
+          try:
+              user_instance = user.objects.get(username=assigned_to_name)
+          except user.DoesNotExist:
+              return Response({"msg":"user not found"},status=200)
 
           create_project =project.objects.create(
                name=name,
@@ -396,6 +401,7 @@ def project_create(request):
                priority=priority,
                start_date=start_date,
                category=category_instance,
+               assigned_to =user_instance,
                End_date=End_date,
                status=status
 
@@ -428,7 +434,11 @@ def project_details(request):
                "End_date":pro.End_date,
                "category":pro.category.name if pro.category else None,
                "status":pro.status,
-               "create_at":pro.create_at
+               "create_at":pro.create_at,
+               "project_manager":{
+                "assigend to":pro.assigned_to.username,
+                "email":pro.assigned_to.email
+            }
                
           })
      return Response(proj_list,status=200)
@@ -490,12 +500,16 @@ def project_delete(request,name):
 #project_phases#
 @api_view(['POST'])
 def create_phases(request):
+     phases_name =request.data.get("phases")
      project_name =request.data.get("project")
-     role= request.data.get("role")
      team_leader_username =request.data.get("team_leader")
      status = request.data.get("status")
      start_date = request.data.get("start_date")
      end_date = request.data.get("end_date")
+
+     phases_instance = phase_template.objects.get(name=phases_name)
+     if not phases_instance:
+         return Response({"msg":"phases not found"},status=404)
 
      project_instance = project.objects.get(name=project_name)
      if not project_instance:
@@ -507,15 +521,21 @@ def create_phases(request):
           return Response({"msg":"project not found"},status=404)
 
      create_phases= Phase.objects.create(
+        phases=phases_instance,
         project=project_instance,
-        role=role,
         team_leader=user_instance,
         status=status,
         start_date= start_date,
         end_date=end_date
 
      )
-     return Response({"msg":"phases create sucessfully"},status=200)
+     return Response({"msg":"phases create sucessfully",
+                     "phases":phases_name,
+                      "project":project_name,
+                      "team_leader":team_leader_username,
+                      "status":status,
+                      "start_date":start_date,
+                      "end_date":end_date },status=200)
 
 
 
@@ -528,10 +548,12 @@ def get_phases_details(request):
      phase_list=[]
      for phas in phase_obj:
           phase_list.append({
+               "phases":phas.phases.name,
                "project":phas.project.name,
                "description":phas.project.description,
-               "role":phas.role,
+               "team_leader":{
                "team_leader":phas.team_leader.username if phas.team_leader else None,
+               },
                "priority":phas.project.priority,
                "status":phas.status,
                "progress":phas.progress,
@@ -549,7 +571,7 @@ def Phase_update(request,role):
         Phase_instance = Phase.objects.get(role=role)
     except Phase.DoesNotExist:
         return Response({"msg": "Phase instance not found"}, status=404)
-
+    phase_name = request.data.get("phases")
     project_name = request.data.get("project")
     new_role = request.data.get("role")
     team_leader_name = request.data.get("team_leader")
@@ -557,6 +579,13 @@ def Phase_update(request,role):
     progress = request.data.get("progress")
     start_date = request.data.get("start_date")
     end_date = request.data.get("end_date")
+
+    if phase_name:
+        try:
+            phases_instance =phase_template.objects.get(name=phase_name)
+            Phase_instance.phases =phases_instance
+        except phase_template.DoesNotExist:
+            return Response({"msg":"phase_template not found"},status=200)
 
     if project_name:
         try:
@@ -572,8 +601,6 @@ def Phase_update(request,role):
         except user.DoesNotExist:
             return Response({"msg": "Team Leader not found"}, status=404)
 
-    if new_role:
-        Phase_instance.role = new_role
     if status:
         Phase_instance.status = status
     if progress:
@@ -596,6 +623,7 @@ def Phase_delete(request,role):
      
      Phase_delete.delete()
      return Response({"msg":f"user {role} delete sucessfully"},status=200)
+
 
 @api_view(['POST'])
 def create_teamleader_assignment(request):
