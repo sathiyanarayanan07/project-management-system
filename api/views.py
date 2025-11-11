@@ -42,12 +42,6 @@ def Manager_list(request):
 
 
 
-@api_view(['GET'])
-def TeamLeader_list(request):
-     users=TeamLeader.objects.all()
-     serializer = TeamLeaderSerializer(users,many=True)
-     return Response(serializer.data)
-
 
 @api_view(['GET'])
 def Admin_list(request):
@@ -945,6 +939,46 @@ def get_category(request):
          })
      return Response(get,status=200)
 
+@api_view(['PUT'])
+def category_update(request,name):
+        try:
+            category_instance = Category.objects.get(name=name)
+        except Category.DoesNotExist:
+            return Response({"msg":"category not found"},status=404)
+       
+        new_name = request.data.get("name")
+        description = request.data.get("description")
+   
+        if new_name:
+            category_instance.name = new_name
+        if description:
+            category_instance.description = description
+   
+        category_instance.save()
+        serializer = CategorySerializer(category_instance)
+        return Response(serializer.data, status=200)
+
+
+@api_view(['PUT'])
+def admin_update(request,email):
+        try:
+             admin_instance = Admin.objects.get(email=email)
+        except Admin.DoesNotExist:
+             return Response({"msg":"admin not found"},status=404)
+ 
+        admin_name= request.data.get("admin_name")
+        email= request.data.get("email")
+        password = request.data.get("password")
+        role_type = request.data.get("role_type")
+        if admin_name:
+              admin_instance.admin_name= admin_name
+        if email:
+          admin_instance.email = email
+        if password:
+             admin_instance.password = password
+        admin_instance.save()
+        serializer = AdminSerializer(admin_instance)
+        return Response(serializer.data, status=200)
 
 @api_view(['DELETE'])
 def Category_delete(request,name):
@@ -979,6 +1013,67 @@ def create_phase_template(request):
                      "Category_name":Category_name,
                      "name":name,
                      "description":description},status=200)
+
+@api_view(['GET'])
+def phase_template_details(request):
+    phase_obj =phase_template.objects.all()
+    if not phase_obj:
+        return Response({"msg":"phase not found"},status=404)
+    
+    list =[]
+    for p in phase_obj:
+        list.append({
+            "Category":p.category.name,
+            "name":p.name,
+            "description":p.description
+        })
+        return Response(list,status=200)
+
+@api_view(['PUT'])
+def update_phase_template(request, name):
+    try:
+        phase_instance = phase_template.objects.get(name=name)
+    except phase_template.DoesNotExist:
+        return Response({"msg": "Phase template not found"}, status=404)
+
+    category_name = request.data.get("category")
+    name = request.data.get("name")
+    description = request.data.get("description")
+
+    if category_name:
+        try:
+            category_instance = Category.objects.get(name=category_name)
+            phase_instance.category = category_instance
+        except Category.DoesNotExist:
+            return Response({"msg": "Category not found"}, status=404)
+
+
+    if name:
+        phase_instance.name = name
+    if description:
+        phase_instance.description = description
+
+    phase_instance.save()
+
+    return Response({
+        "msg": "Phase template updated successfully",
+        "id": phase_instance.id,
+        "category": phase_instance.category.name,
+        "name": phase_instance.name,
+        "description": phase_instance.description
+    }, status=200)
+
+
+@api_view(['DELETE'])
+def Phase_template_delete(request,name):
+     Phase_template_delete = phase_template.objects.filter(name=name)
+     if not user_delete:
+          return Response({"msg":f"Phase template {name}not found "},status=404)
+     
+     Phase_template_delete.delete()
+     return Response({"msg":f"Phase template {name} delete sucessfully"},status=200)
+
+
       
 
 

@@ -4,16 +4,21 @@ from .import views
 urlpatterns = [
      path("user_list/",views.user_list,name="user_list"),
      path("Manager_list/",views.Manager_list,name="Manager_list"),
-     path("TeamLeader_list/",views.TeamLeader_list,name="TeamLeader_list"),
+     #admin
+     path("admin_update/<str:email>/",views.admin_update,name="admin_update"),
      path("Admin_list/",views.Admin_list,name="Admin_list"),
      path("Category_list/",views.Category_list,name="Category_list"),
      #category
      path("category_create/",views.category_create,name="category_create"),
      path("get_category/",views.get_category,name="get_category"),
+     path("Category_update/<str:name>/",views.category_update,name="Category_update"),
      path("Category_delete/<str:name>/",views.Category_delete,name="Category_delete"),
      #phase_template
      path("create_phase_template/",views.create_phase_template,name="create_phase_template"),
      path("phase_template_list/",views.phase_template_list,name="phase_template_list"),
+     path("phase_template_details/",views.phase_template_details,name="phase_template_details"),
+     path("update_phase_template/<str:name>/",views.update_phase_template,name="update_phase_template"),
+     path("Phase_template_delete/<str:name>/",views.Phase_template_delete,name="Phase_template_delete"),
     #login#
     path("single_login/",views.Single_login,name="single_login"),
     path("am_login/",views.AM_login,name="admin_manager_login"),
