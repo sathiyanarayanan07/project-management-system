@@ -1102,7 +1102,27 @@ def Phase_template_delete(request,name):
      return Response({"msg":f"Phase template {name} delete sucessfully"},status=200)
 
 
-      
+@api_view(['GET'])
+def category_with_phases(request):
+    categories = Category.objects.all().prefetch_related('phase_template_set')
+
+    data = []
+    for category in categories:
+        data.append({
+            'id': category.id,
+            'name': category.name,
+            'description': category.description,
+            'phases': [
+                {
+                    'id': phase.id,
+                    'name': phase.name,
+                    'description': phase.description
+                }
+                for phase in category.phase_template_set.all()
+            ]
+        })
+    return Response(data)
+         
 
 
 

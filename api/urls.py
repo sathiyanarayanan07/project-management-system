@@ -65,7 +65,9 @@ urlpatterns = [
     path("subtask_create/",views.subtask_create,name="subtask_create"),
     path("details_subtask/",views.details_subtask,name="details_subtask"),
     path("update_subtask/<str:name>/",views.update_subtask,name="update_subtask"),
-    path("subtask_delete/<str:name>/",views.subtask_delete,name="subtask_delete")
+    path("subtask_delete/<str:name>/",views.subtask_delete,name="subtask_delete"),
+    path("get_categories_with_phases/", views.category_with_phases, name="get_categories_with_phases"),
+
 
     
 

@@ -130,3 +130,26 @@ class subTask(models.Model):
 
     def __str__(self):
         return f"{self.name}--{self.tasks}"
+    
+
+# class Dailynotes(models.Model):
+#     Tasks= models.ForeignKey(Task,on_delete=models.CASCADE,null=True,blank=True)
+#     context = models.TextField(null=True,blank=True)
+#     created_at= models.DateTimeField(auto_created=True)
+
+#     def __str__(self):
+#         return self.context
+
+class persontask(models.Model):
+    name= models.CharField(max_length=100,null=True,blank=True)
+    description =models.TextField(null=True,blank=True)
+    assigned_to =models.ForeignKey(user,on_delete=models.CASCADE,null=True,blank=True)
+    start_date =models.DateField(null=True,blank=True)
+    end_date =models.DateField(null=True,blank=True)
+    progress =models.IntegerField(null=True,blank=True)
+    status=models.CharField(max_length=100,null=True,blank=True,default="not started")
+    notes =models.TextField(null=True,blank=True)
+    created_at =models.DateTimeField(auto_created=True)
+
+    def __str__(self):
+        return self.name
