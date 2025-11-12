@@ -56,4 +56,9 @@ class phase_templatesSerializer(serializers.ModelSerializer):
         model =phase_template
         fields ="__all__"
 
+class persontaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model =persontask
+        fields ="__all__"
+
 

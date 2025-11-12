@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import user,Manager,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task,subTask,phase_template
-from .serializers import userSerializer,ManagerSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer,subTaskSerializer,phase_templatesSerializer
+from .models import user,Manager,Admin,Team,project,Phase,TeamLeaderAssignment,Category,Task,subTask,phase_template,persontask
+from .serializers import userSerializer,ManagerSerializer,AdminSerializer,TeamSerializer,projectSerializer,PhaseSerializer,teamleader_to_membersSerializer,CategorySerializer,subTaskSerializer,phase_templatesSerializer,persontaskSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 import uuid
@@ -1123,6 +1123,130 @@ def category_with_phases(request):
         })
     return Response(data)
          
+
+@api_view(['POST'])
+def persontask_create(request):
+    name = request.data.get("name")
+    description = request.data.get("description")
+    assigned_to_name = request.data.get("assigned_to")
+    start_date = request.data.get("start_date")
+    end_date =request.data.get("end_date")
+
+    try:
+        user_instance =user.objects.get(username=assigned_to_name)
+    except user.DoesNotExist:
+        return Response({"msg":"user not found"},status=404)
+    
+    create_persontask =persontask.objects.create(
+        name=name,
+        description=description,
+        assigned_to=user_instance,
+        start_date=start_date,
+        end_date=end_date
+
+    )
+    create_persontask.save()
+
+    return Response({"msg":"task create sucessfully",
+                     "name":name,
+                     "description":description,
+                     "assigned_to":assigned_to_name,
+                     "start_date":start_date,
+                     "end_date":end_date},status=200)
+
+@api_view(['GET'])
+def details_persontask(request):
+    task_obj =persontask.objects.all()
+
+    if not task_obj:
+        return Response({"msg":"person task not found"},status=404)
+    
+    lists=[]
+    for t in task_obj:
+        lists.append({
+            "name":t.name,
+            "description":t.description,
+            "assigned_to":t.assigned_to.username,
+            "start_date":t.start_date,
+            "end_date":t.end_date,
+            "progress":t.progress,
+            "status":t.status,
+            "notes":t.notes
+        })
+    return Response(lists,status=200)
+
+
+
+@api_view(['GET'])
+def persontask_list(request):
+     users=persontask.objects.all()
+     serializer = persontaskSerializer(users,many=True)
+     return Response(serializer.data)
+
+@api_view(['PUT'])
+def update_persontask(request,name):
+    try:
+        persontask_instance = persontask.objects.get(name=name)
+    except persontask.DoesNotExist:
+        return Response({"msg": "Phase template not found"}, status=404)
+
+    name = request.data.get("name")
+    description = request.data.get("description")
+    assigned_to = request.data.get("assigned_to")
+    start_date = request.data.get("start_date")
+    end_date = request.data.get("end_date")
+    progress=request.data.get("progress")
+    status =request.data.get("status")
+    notes=request.data.get("notes")
+
+
+    if name:
+        persontask_instance.name = name
+    if description:
+        persontask_instance.description = description
+    if assigned_to:
+        persontask_instance.assigned_to =assigned_to
+    if start_date:
+        persontask_instance.start_date=start_date
+    if end_date:
+        persontask_instance.end_date =end_date
+    if progress:
+        persontask_instance.progress=progress
+    if status:
+        persontask_instance.status=status
+    if notes:
+        persontask_instance.notes=notes
+
+
+
+    persontask_instance.save()
+
+    return Response({
+        "msg": " persontask instance updated successfully",
+        "id": persontask_instance.id
+    }, status=200)
+
+
+
+@api_view(['DELETE'])
+def persontask_delete(request,name):
+     persontask_delete = persontask.objects.filter(name=name)
+     if not user_delete:
+          return Response({"msg":f"persontask {name}not found "},status=404)
+     
+     persontask_delete.delete()
+     return Response({"msg":f"persontask {name} delete sucessfully"},status=200)
+
+
+
+
+
+    
+
+
+
+
+
 
 
 

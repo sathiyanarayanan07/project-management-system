@@ -68,6 +68,13 @@ urlpatterns = [
     path("subtask_delete/<str:name>/",views.subtask_delete,name="subtask_delete"),
     path("get_categories_with_phases/", views.category_with_phases, name="get_categories_with_phases"),
 
+    path("persontask_create/",views.persontask_create,name="persontask_create"),
+    path("details_persontask/",views.details_persontask,name="details_persontask"),
+    path("persontask_list/",views.persontask_list,name="persontask_list"),
+    path("update_persontask/<str:name>/",views.update_persontask,name="update_persontask"),
+    path("persontask_delete/<str:name>/",views.persontask_delete,name="persontask_delete")
+
+
 
     
 
